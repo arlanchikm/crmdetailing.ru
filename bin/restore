@@ -1,0 +1,30 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 2 ]; then
+  echo "Использование: $0 database.dump media.tar.gz" >&2
+  exit 1
+fi
+
+PROJECT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+DATABASE_DUMP=$1
+MEDIA_ARCHIVE=$2
+ENV_FILE=${PRODUCTION_ENV_FILE:-"$PROJECT_DIR/.env.production"}
+
+if [ ! -f "$ENV_FILE" ] || [ ! -f "$DATABASE_DUMP" ] || [ ! -f "$MEDIA_ARCHIVE" ]; then
+  echo "Не найден env-файл, дамп базы или архив media." >&2
+  exit 1
+fi
+
+cd "$PROJECT_DIR"
+set -a
+. "$ENV_FILE"
+set +a
+
+docker compose --env-file "$ENV_FILE" -f compose.prod.yaml up -d --wait db redis
+docker compose --env-file "$ENV_FILE" -f compose.prod.yaml exec -T db \
+  pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner --no-privileges < "$DATABASE_DUMP"
+docker compose --env-file "$ENV_FILE" -f compose.prod.yaml run --rm --no-deps -T web \
+  tar -xzf - -C /app < "$MEDIA_ARCHIVE"
+
+echo "База и media восстановлены. Запустите: ./bin/prod up -d --build"

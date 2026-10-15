@@ -1,0 +1,66 @@
+{% extends "base.html" %}{% load crm_numbers %}
+{% block title %}Расходники — {{ current_tenant.name }}{% endblock %}
+{% block body_class %}consumable-list-body{% endblock %}
+{% block crm_content %}
+<div class="page-heading">
+  <div><h1>Расходники</h1><p>План рассчитывается по нормативным списаниям, факт вводится после ручного подсчёта</p></div>
+  <div class="heading-actions inventory-heading-actions"><a class="button primary" href="{% url 'inventory-movement-list' %}">История движений</a>{% if tenant_permissions.inventory_manage %}<a class="button" href="{% url 'inventory-category-list' %}">Категории</a><a class="button primary mobile-create-action" href="{% url 'consumable-create' %}" aria-label="Добавить расходник">+ Добавить расходник</a>{% endif %}</div>
+</div>
+{% if low_stock %}<div class="payroll-notice inventory-low-notice"><strong>Нужно пополнить:</strong> {% for item in low_stock %}{{ item.name }}{% if not forloop.last %}, {% endif %}{% endfor %}.</div>{% endif %}
+<div class="inventory-status-grid" aria-label="Фильтр по остаткам">
+  <button type="button" class="inventory-status-card status-all active" data-inventory-status="all"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/></svg></span><small>Всего позиций</small><strong>{{ consumables|length }}</strong></button>
+  <button type="button" class="inventory-status-card status-normal" data-inventory-status="normal"><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.6 2.6L16.5 9"/></svg></span><small>В норме</small><strong data-status-count="normal">{{ status_counts.normal }}</strong></button>
+  <button type="button" class="inventory-status-card status-low" data-inventory-status="low"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.4 4.2 2.8 17.5A1.7 1.7 0 0 0 4.3 20h15.4a1.7 1.7 0 0 0 1.5-2.5L13.6 4.2a1.8 1.8 0 0 0-3.2 0Z"/><path d="M12 9v4M12 16.8h.01"/></svg></span><small>На исходе</small><strong data-status-count="low">{{ status_counts.low }}</strong></button>
+  <button type="button" class="inventory-status-card status-empty" data-inventory-status="empty"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 3-1.35M21 7v5"/><circle cx="18" cy="17" r="4"/><path d="m16.5 15.5 3 3m0-3-3 3"/></svg></span><small>Закончились</small><strong data-status-count="empty">{{ status_counts.empty }}</strong></button>
+</div>
+<div class="mobile-reference-search inventory-search-panel"><label><span aria-hidden="true">⌕</span><input type="search" placeholder="Поиск по расходникам…" data-inventory-search aria-label="Поиск по расходникам"></label><button type="button" data-inventory-category-toggle aria-label="Фильтр по категориям">☷</button></div>
+<div class="inventory-category-filter" data-inventory-category-filter hidden><button class="active" type="button" data-inventory-category="all">Все категории</button>{% regroup consumables by category as category_groups %}{% for group in category_groups %}<button type="button" data-inventory-category="{{ group.grouper.id }}">{{ group.grouper.name }}</button>{% endfor %}</div>
+
+<div class="table-card inventory-table-card inventory-desktop-table">
+  <table class="inventory-table"><thead><tr><th>Расходник</th><th>Категория</th><th>Стоимость</th><th>План</th><th>Факт</th><th>Минимум</th><th>Отклонение</th><th></th></tr></thead><tbody>
+  {% for item in consumables %}<tr data-inventory-item data-inventory-id="{{ item.id }}" data-stock-status="{{ item.stock_status }}" data-inventory-category="{{ item.category_id }}" data-inventory-name="{{ item.name|lower }} {{ item.category.name|lower }}">
+    <td data-label="Расходник"><strong>{{ item.name }}</strong><small class="table-subtitle"><span class="inventory-state inventory-state-{{ item.stock_status }}" data-stock-status-label>{{ item.stock_status_label }}</span></small></td><td data-label="Категория">{{ item.category.name }}</td>
+    <td data-label="Стоимость">{{ item.cost_per_unit|floatformat:"-2" }} ₽ / {{ item.price_unit_display }}</td><td data-label="План"><span><strong data-planned-value>{{ item.planned_stock|trim_decimal }}</strong> {{ item.unit_display }}</span></td>
+    <td data-label="Факт">{% if tenant_permissions.inventory_count or tenant_permissions.inventory_manage %}{% include "inventory/_inline_stock_form.html" %}{% else %}<strong>{{ item.actual_stock|trim_decimal }}</strong> {{ item.unit_display }}{% endif %}</td>
+    <td data-label="Минимум">{% if item.minimum_stock %}{{ item.minimum_stock|trim_decimal }} {{ item.unit_display }}{% else %}—{% endif %}</td><td data-label="Отклонение"><span class="variance {% if item.variance < 0 %}negative{% elif item.variance > 0 %}positive{% endif %}" data-variance-value>{{ item.variance|trim_decimal }} {{ item.unit_display }}</span></td>
+    <td class="actions" data-label="">{% if tenant_permissions.inventory_manage %}<a href="{% url 'consumable-edit' item.id %}">Изменить</a>{% endif %}</td>
+  </tr>{% empty %}<tr><td class="empty" colspan="8">Добавьте первый расходник.</td></tr>{% endfor %}</tbody></table>
+</div>
+
+<div class="mobile-inventory-list">
+  {% for item in consumables %}<article class="mobile-inventory-card is-open" data-inventory-item data-inventory-id="{{ item.id }}" data-stock-status="{{ item.stock_status }}" data-inventory-category="{{ item.category_id }}" data-inventory-name="{{ item.name|lower }} {{ item.category.name|lower }}">
+    <div class="mobile-inventory-card__head"><span class="inventory-item-copy"><strong>{{ item.name }}</strong><small>{{ item.category.name }}</small></span><em class="inventory-state inventory-state-{{ item.stock_status }}" data-stock-status-label>{{ item.stock_status_label }}</em></div>
+    <div class="mobile-inventory-card__body" id="inventory-details-{{ item.id }}">
+      <div class="inventory-fact-grid">
+        <div class="inventory-fact-column">
+          <div class="inventory-fact-row"><span>Стоимость</span><strong>{{ item.cost_per_unit|floatformat:"-2" }} ₽ / {{ item.price_unit_display }}</strong></div>
+          <div class="inventory-fact-row"><span>План</span><strong><b data-planned-value>{{ item.planned_stock|trim_decimal }}</b> {{ item.unit_display }}</strong></div>
+          <div class="inventory-fact-row inventory-fact-row-edit"><span>Факт</span><div>{% if tenant_permissions.inventory_count or tenant_permissions.inventory_manage %}{% include "inventory/_inline_stock_form.html" %}{% else %}<strong>{{ item.actual_stock|trim_decimal }} {{ item.unit_display }}</strong>{% endif %}</div></div>
+        </div>
+        <div class="inventory-fact-column">
+          <div class="inventory-fact-row"><span>Минимум</span><strong>{% if item.minimum_stock %}{{ item.minimum_stock|trim_decimal }} {{ item.unit_display }}{% else %}—{% endif %}</strong></div>
+          <div class="inventory-fact-row"><span>Отклонение</span><strong class="variance {% if item.variance < 0 %}negative{% elif item.variance > 0 %}positive{% endif %}" data-variance-value>{{ item.variance|trim_decimal }} {{ item.unit_display }}</strong></div>
+          {% if tenant_permissions.inventory_manage %}<a class="mobile-card-edit" href="{% url 'consumable-edit' item.id %}">Изменить</a>{% endif %}
+        </div>
+      </div>
+    </div>
+  </article>{% empty %}<div class="empty-card">Добавьте первый расходник.</div>{% endfor %}
+</div>
+<script>
+(() => {
+  const items=[...document.querySelectorAll('[data-inventory-item]')]; let status='all'; let category='all'; const search=document.querySelector('[data-inventory-search]');
+  const apply=()=>{const query=(search?.value||'').trim().toLowerCase();items.forEach(item=>item.hidden=!((status==='all'||item.dataset.stockStatus===status)&&(category==='all'||item.dataset.inventoryCategory===category)&&item.dataset.inventoryName.includes(query)));};
+  document.querySelectorAll('[data-inventory-status]').forEach(button=>button.addEventListener('click',()=>{status=button.dataset.inventoryStatus;document.querySelectorAll('[data-inventory-status]').forEach(item=>item.classList.toggle('active',item===button));apply();}));
+  const categoryButtons=[...document.querySelectorAll('[data-inventory-category-filter] [data-inventory-category]')];
+  categoryButtons.forEach(button=>button.addEventListener('click',()=>{category=button.dataset.inventoryCategory;categoryButtons.forEach(item=>item.classList.toggle('active',item===button));apply();}));
+  search?.addEventListener('input',apply);
+  document.querySelector('[data-inventory-category-toggle]')?.addEventListener('click',()=>{const panel=document.querySelector('[data-inventory-category-filter]');panel.hidden=!panel.hidden;});
+  document.querySelectorAll('[data-inline-stock]').forEach(form=>{
+    const valueLabel=form.querySelector('[data-stock-value]');const input=form.querySelector('input[name="actual_stock"]');const error=form.querySelector('[data-stock-error]');
+    const start=()=>{form.classList.add('is-editing');input.focus();input.select();};valueLabel.addEventListener('click',start);
+    input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();form.requestSubmit();}else if(event.key==='Escape'){form.classList.remove('is-editing');input.value=valueLabel.textContent.trim().replace(/\s/g,'');input.blur();}});
+    form.addEventListener('submit',async event=>{event.preventDefault();error.textContent='';form.classList.add('is-saving');try{const response=await fetch(form.action,{method:'POST',body:new FormData(form),credentials:'same-origin',headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'}});const data=await response.json();if(!response.ok)throw new Error(data.error||'Не удалось сохранить');const formatted=new Intl.NumberFormat('ru-RU',{maximumFractionDigits:3}).format(Number(data.value));const container=form.closest('[data-inventory-item]');const twins=[...document.querySelectorAll(`[data-inventory-id="${container.dataset.inventoryId}"]`)];const oldStatus=container.dataset.stockStatus;twins.forEach(item=>{item.dataset.stockStatus=data.status;item.querySelectorAll('[data-stock-value]').forEach(node=>node.textContent=formatted);item.querySelectorAll('input[name="actual_stock"]').forEach(node=>node.value=formatted.replace(/\s/g,''));item.querySelectorAll('[data-planned-value]').forEach(node=>node.textContent=formatted);item.querySelectorAll('[data-variance-value]').forEach(node=>{node.textContent=`0 ${node.textContent.trim().split(/\s+/).pop()}`;node.className='variance';node.dataset.varianceValue='';});item.querySelectorAll('[data-stock-status-label]').forEach(node=>{node.textContent=data.status_label;node.className=`inventory-state inventory-state-${data.status}`;node.dataset.stockStatusLabel='';});});if(oldStatus!==data.status){const oldCount=document.querySelector(`[data-status-count="${oldStatus}"]`);const newCount=document.querySelector(`[data-status-count="${data.status}"]`);if(oldCount)oldCount.textContent=String(Math.max(0,Number(oldCount.textContent)-1));if(newCount)newCount.textContent=String(Number(newCount.textContent)+1);}form.classList.remove('is-editing');input.blur();apply();}catch(requestError){error.textContent=requestError.message||'Не удалось сохранить';form.classList.add('is-editing');}finally{form.classList.remove('is-saving');}});
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'platform/base.html' %}{% load static %}
+{% block body %}
+<div class="page-heading"><div><h1>Редактирование документа</h1><p>{{ document.title }} · редакция {{ document.version }}</p></div><a class="button secondary" href="{% url 'platform-legal' %}">Все документы</a></div>
+<form method="post" class="form-card" data-legal-form>{% csrf_token %}
+<div class="field">{{ form.title.label_tag }}{{ form.title }}{{ form.title.errors }}</div>
+<div class="field"><label id="legal-content-label">Текст документа</label>{{ form.content.errors }}
+<div class="legal-editor-toolbar" role="toolbar" aria-label="Форматирование текста">
+<button class="button secondary small" type="button" data-legal-command="bold">Жирный</button><button class="button secondary small" type="button" data-legal-command="italic">Курсив</button><button class="button secondary small" type="button" data-legal-command="formatBlock" data-legal-value="h2">Заголовок</button><button class="button secondary small" type="button" data-legal-command="formatBlock" data-legal-value="p">Абзац</button><button class="button secondary small" type="button" data-legal-command="insertUnorderedList">Список</button>
+</div>
+<textarea name="content" hidden data-legal-input>{{ form.content.value|default:'' }}</textarea>
+<div class="legal-editor-content" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="legal-content-label" data-legal-editor>{{ editor_content|safe }}</div>
+<small class="help-text">Сохранение публикует новую редакцию на сайте.</small></div>
+<div class="form-actions"><button class="button primary" type="submit">Сохранить и опубликовать</button></div>
+</form>
+{% if revisions %}<section class="form-card" style="margin-top:24px"><h2>Предыдущие редакции</h2>{% for revision in revisions %}<details><summary>{{ revision.version }} · {{ revision.created_at|date:'d.m.Y H:i' }}</summary><h3>{{ revision.title }}</h3><div class="legal-document">{{ revision.content|safe }}</div></details>{% endfor %}</section>{% endif %}
+<script src="{% static 'js/legal-editor.js' %}?v=20261005-legal1" defer></script>
+{% endblock %}

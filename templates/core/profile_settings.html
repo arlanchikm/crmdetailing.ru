@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Настройки пользователя — {{ current_tenant.name }}{% endblock %}
+{% block body_class %}profile-settings-body{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><h1>Настройки</h1><p>Личные данные и безопасность аккаунта</p></div><form class="mobile-settings-logout" method="post" action="{% url 'logout' %}" onsubmit="return confirm('Выйти из аккаунта?')">{% csrf_token %}<button class="button secondary mobile-settings-logout-button" type="submit">Выйти</button></form></div>
+<nav class="settings-tabs" aria-label="Разделы настроек">
+  <a class="active" href="{% url 'profile-settings' %}">Настройки пользователя</a>
+  {% if current_membership.role == 'owner' %}<a href="{% url 'company-settings' %}">Настройки компании</a>{% endif %}
+  <a href="{% url 'interface-settings' %}">Интерфейс</a>
+  
+  {% if current_membership.role == 'owner' %}{% endif %}
+</nav>
+{% if current_membership.role == 'owner' %}
+<section class="form-card account-subscription-card"><div><span class="eyebrow">Подписка</span><h2>{{ current_subscription.plan.name }}</h2><p>{{ current_subscription.plan.description }}</p></div><div class="account-subscription-status"><strong>{{ current_subscription.get_status_display }}</strong><small>{% if current_subscription.status == 'trial' %}Триал до {{ current_subscription.trial_ends_at|date:"d.m.Y H:i" }}{% elif current_subscription.ends_at %}До {{ current_subscription.ends_at|date:"d.m.Y H:i" }}{% endif %}</small></div><a class="button primary" href="{% url 'subscription-settings' %}">Изменить подписку</a></section>
+<section class="form-card data-tools-card"><div><h2>Импорт и экспорт</h2><p>Перенос данных из Excel, CSV и выгрузок других CRM</p></div><div class="form-actions"><a class="button secondary" href="{% url 'import-index' %}">Импортировать данные</a><a class="button secondary" href="{% url 'company-export' %}">Экспорт данных</a></div></section>
+{% endif %}
+<nav class="account-tools profile-settings-links" aria-label="Безопасность и уведомления"><a class="button secondary" href="{% url 'security-settings' %}">Безопасность и 2FA</a><a class="button secondary" href="{% url 'notification-settings' %}">Настройки уведомлений</a></nav>
+<div class="settings-layout">
+  <form class="form-card settings-card" method="post" enctype="multipart/form-data">
+    {% csrf_token %}<input type="hidden" name="section" value="profile">
+    <div class="section-heading compact-heading"><div><h2>Профиль</h2><p>Эти данные видны в интерфейсе компании</p></div></div>
+    <div class="profile-editor">
+      <div class="profile-photo-preview">{% if user.avatar %}<img src="{{ user.avatar.url }}" alt="Фотография {{ profile_form.first_name.value }}">{% else %}<span>{{ profile_form.first_name.value|slice:":1"|upper }}</span>{% endif %}</div>
+      <div class="profile-photo-fields"><div class="field">{{ profile_form.avatar.label_tag }}{{ profile_form.avatar }}{% if profile_form.avatar.help_text %}<small class="help-text">{{ profile_form.avatar.help_text }}</small>{% endif %}{% for error in profile_form.avatar.errors %}<small class="error-text">{{ error }}</small>{% endfor %}</div>{% if user.avatar %}<label class="check-field">{{ profile_form.remove_avatar }}<span>{{ profile_form.remove_avatar.label }}</span></label>{% endif %}</div>
+    </div>
+    <div class="form-grid settings-form-grid">
+      <div class="field">{{ profile_form.first_name.label_tag }}{{ profile_form.first_name }}{% for error in profile_form.first_name.errors %}<small class="error-text">{{ error }}</small>{% endfor %}</div>
+      <div class="field"><label>Email</label><input value="{{ user.email }}" disabled></div>
+      <div class="field"><label>Профессия в компании</label><input value="{{ profession }}" disabled></div>
+    </div>
+    {% for error in profile_form.non_field_errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+    <div class="form-actions"><button class="button primary" type="submit">Сохранить профиль</button></div>
+  </form>
+  <form class="form-card settings-card" method="post">
+    {% csrf_token %}<input type="hidden" name="section" value="password">
+    <div class="section-heading compact-heading"><div><h2>Смена пароля</h2><p>После сохранения текущий сеанс останется активным</p></div></div>
+    {% for field in password_form %}<div class="field">{{ field.label_tag }}{{ field }}{% if field.help_text %}<small class="help-text password-help">{{ field.help_text|safe }}</small>{% endif %}{% for error in field.errors %}<small class="error-text">{{ error }}</small>{% endfor %}</div>{% endfor %}
+    {% for error in password_form.non_field_errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+    <div class="form-actions"><button class="button primary" type="submit">Изменить пароль</button></div>
+  </form>
+</div>
+{% endblock %}

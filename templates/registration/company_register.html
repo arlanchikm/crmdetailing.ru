@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Регистрация компании — CRM Detailing{% endblock %}
+{% block body_class %}login-page registration-page{% endblock %}
+{% block content %}
+<section class="auth-card registration-card">
+  <p class="eyebrow">CRM Detailing</p>
+  <h1>Регистрация в CRM</h1>
+  <p class="auth-intro">После регистрации CRM будет доступна на отдельном адресе вашей компании.</p>
+  {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="registration-fields">
+      <div class="registration-field"><label for="id_plan">14 дней бесплатно · все функции CRM</label>{{ form.plan }}{{ form.plan.errors }}</div>
+      <div class="registration-field"><label for="id_company_name">Название компании</label>{{ form.company_name }}{{ form.company_name.errors }}</div>
+      <div class="registration-field"><label for="id_slug">Адрес CRM</label><div class="slug-field">{{ form.slug }}<span>.{{ primary_domain }}</span></div><small>{{ form.slug.help_text }}</small>{{ form.slug.errors }}</div>
+      <div class="registration-field"><label for="id_owner_name">Ваше имя</label>{{ form.owner_name }}{{ form.owner_name.errors }}</div>
+      <div class="registration-field"><label for="id_email">Email</label>{{ form.email }}{{ form.email.errors }}</div>
+      <div class="registration-field"><label for="id_password1">Пароль</label><div class="login-field login-password-field"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>{{ form.password1 }}<button class="password-visibility-toggle" type="button" data-password-toggle aria-controls="id_password1" aria-label="Показать пароль" aria-pressed="false"><svg class="password-eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg><svg class="password-eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/><path d="M4 4l16 16"/></svg></button></div>{{ form.password1.errors }}</div>
+      <div class="registration-field"><label for="id_password2">Повторите пароль</label><div class="login-field login-password-field"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>{{ form.password2 }}<button class="password-visibility-toggle" type="button" data-password-toggle aria-controls="id_password2" aria-label="Показать пароль" aria-pressed="false"><svg class="password-eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg><svg class="password-eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/><path d="M4 4l16 16"/></svg></button></div>{{ form.password2.errors }}</div>
+    </div>
+    <fieldset class="registration-consents">
+      <legend>Согласия</legend>
+      <label class="registration-consent" for="id_personal_data_consent">
+        {{ form.personal_data_consent }}
+        <span>Я даю <a href="{% url 'legal-document' 'personal-data-consent' %}" target="_blank" rel="noopener">согласие на обработку персональных данных</a> (редакция от {{ personal_data_version }}).</span>
+      </label>
+      {{ form.personal_data_consent.errors }}
+      <label class="registration-consent" for="id_offer_acceptance">
+        {{ form.offer_acceptance }}
+        <span>Я принимаю условия <a href="{% url 'legal-document' 'offer' %}" target="_blank" rel="noopener">публичной оферты</a> (редакция от {{ offer_version }}).</span>
+      </label>
+      {{ form.offer_acceptance.errors }}
+      <label class="registration-consent" for="id_marketing_consent">
+        {{ form.marketing_consent }}
+        <span>Я согласен получать рекламные и маркетинговые сообщения на условиях <a href="{% url 'legal-document' 'marketing-consent' %}" target="_blank" rel="noopener">отдельного согласия</a>. Необязательно.</span>
+      </label>
+      {{ form.marketing_consent.errors }}
+      <p>С порядком обработки данных можно ознакомиться в <a href="{% url 'legal-document' 'privacy' %}" target="_blank" rel="noopener">Политике обработки персональных данных</a>.</p>
+    </fieldset>
+    <button class="primary-button" type="submit">Создать компанию</button>
+  </form>
+  <div class="auth-secondary-actions"><a class="auth-secondary-link" href="{% url 'landing' %}#login">Уже есть аккаунт?</a></div>
+</section>
+{% endblock %}

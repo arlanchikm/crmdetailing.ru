@@ -1,0 +1,16 @@
+/* Shared document defaults required by the public page, without workspace CSS. */
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #132133;
+  background: #f4f6f8;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; }
+.billing-public-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.billing-public-grid .landing-plan { padding: 26px; border: 1px solid rgba(150,170,195,.4); border-radius: 24px; }
+.billing-public-grid .landing-plan-price { display: block; font-size: 36px; margin: 20px 0; }
+.billing-public-grid .landing-plan-price small { font-size: 16px; }
+.billing-public-grid .landing-button { margin-top: 18px; background: #087cff; color: white; padding: 14px; border-radius: 14px; display: inline-flex; }
+@media (max-width: 1100px) { .billing-public-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .billing-public-grid { grid-template-columns: 1fr; } }

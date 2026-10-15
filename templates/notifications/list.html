@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Уведомления — {{ current_tenant.name }}{% endblock %}
+{% block body_class %}notification-list-body{% endblock %}
+{% block crm_content %}<div class="account-tools notification-settings-link"><a class="button secondary" href="{% url 'notification-settings' %}">Настройки уведомлений</a></div>
+<div class="page-heading notification-heading"><div><h1>Уведомления</h1><p>Важные события компании в одном месте</p></div>{% if unread_notifications %}<form method="post" action="{% url 'notification-read-all' %}">{% csrf_token %}<button class="button ghost">Прочитать все</button></form>{% endif %}</div>
+{% if not automation_enabled %}<section class="tariff-inline-lock"><span>🔒</span><div><strong>Автоматические сценарии доступны на тарифе «Бизнес»</strong><p>Стандартные системные уведомления продолжают работать.</p></div><a class="button secondary" href="{% url 'subscription-settings' %}">Тарифы</a></section>{% endif %}
+<section class="notification-list">{% for row in notifications %}<article class="notification-card severity-{{ row.severity }} {% if not row.read_at %}unread{% endif %}"><div><span class="eyebrow">{{ row.get_severity_display }} · {{ row.created_at|date:"d.m.Y H:i" }}</span><h3>{% if row.url %}<a href="{{ row.url }}" data-notification-read="{% url 'notification-read' row.id %}">{{ row.title }}</a>{% else %}{{ row.title }}{% endif %}</h3>{% if row.message %}<p>{{ row.message }}</p>{% endif %}</div>{% if not row.read_at %}<form method="post" action="{% url 'notification-read' row.id %}">{% csrf_token %}<button class="button ghost">Прочитано</button></form>{% endif %}</article>{% empty %}<div class="empty-card">Уведомлений пока нет.</div>{% endfor %}</section>
+{% endblock %}

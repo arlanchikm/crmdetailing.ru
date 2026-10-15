@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block title %}Безопасность аккаунта{% endblock %}{% block crm_content %}<div class="page-heading"><div><h1>Безопасность</h1><p>Подтверждение почты и двухфакторная аутентификация</p></div><a class="button secondary" href="{% url 'profile-settings' %}">Настройки пользователя</a></div>{% include 'core/_security_settings.html' %}{% endblock %}

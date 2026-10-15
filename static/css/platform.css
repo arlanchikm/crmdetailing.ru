@@ -1,0 +1,40 @@
+
+.platform-body { background: #edf2f8; color: #15263c; }
+.platform-header { margin-bottom: 25px; border-bottom: 1px solid #d5dfeb; }
+.platform-header a { color: #1b3557; text-decoration: none; }
+.platform-header nav a { padding: 9px 12px; border-radius: 10px; background: #fff9; font-size: 14px; font-weight: 650; }
+.platform-header nav a:hover { color: #087cff; background: #fff; }
+.platform-header nav { gap: 10px; justify-content: flex-end; }
+.platform-header .text-action { color: #56718d; background: none; border: 0; cursor: pointer; padding: 9px 12px; }
+.platform-shell h1 { font-size: 32px; margin: 20px 0 24px; }
+.platform-shell h2 { font-size: 23px; margin: 32px 0 18px; }
+.platform-shell .table-card, .platform-shell .form-card { background: rgba(255,255,255,.85); border: 1px solid #dbe4ef; border-radius: 20px; box-shadow: 0 8px 24px #31507208; }
+.platform-shell .table-card { overflow-x: auto; }
+.platform-shell table { width: 100%; min-width: 680px; border-collapse: collapse; }
+.platform-shell th, .platform-shell td { padding: 18px; border-bottom: 1px solid #e1e8f1; text-align: left; vertical-align: middle; }
+.platform-shell tr:last-child td { border-bottom: 0; }
+.platform-shell th { background: #f7f9fc; color: #72829a; font-size: 11px; font-weight: 750; letter-spacing: .08em; }
+.platform-shell td { font-size: 14px; }
+.platform-shell td a { color: #087cff; text-decoration: none; font-weight: 650; }
+.platform-shell .table-subtitle { display: block; color: #70839a; margin-top: 5px; }
+.platform-shell .field label { display: block; margin-bottom: 7px; font-weight: 650; }
+.platform-shell input:not([type=checkbox]):not([type=hidden]), .platform-shell textarea, .platform-shell select { padding: 12px 14px; border: 1px solid #cedcec; border-radius: 12px; background: white; color: #1b3557; font: inherit; max-width: 100%; }
+.platform-shell .field input:not([type=checkbox]), .platform-shell .field textarea, .platform-shell .field select { width: 100%; }
+.platform-shell .field input[type=checkbox] { width: 17px; height: 17px; margin-right: 7px; accent-color: #087cff; }
+.platform-shell .field ul { list-style: none; padding: 0; }
+.platform-shell .button { border: 1px solid #cadcec; border-radius: 12px; padding: 12px 18px; background: #edf4ff; color: #0861c1; cursor: pointer; font-weight: 700; }
+.platform-shell .button.primary { color: white; background: #087cff; border-color: #087cff; }
+.platform-shell .form-card h2 { margin-top: 0; }
+.platform-shell .errorlist, .platform-shell .form-error { color: #b1282e; }
+@media(max-width:600px) { .platform-header nav { justify-content: flex-start; } .platform-shell .form-card { padding: 20px; } .platform-shell h1 { font-size: 28px; } }
+
+.platform-payment-filters { display:flex; flex-wrap:wrap; gap:16px; align-items:end; }
+.platform-payment-filters .field { flex:1; min-width:160px; }
+.platform-payment-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+.platform-payment-stats strong { font-size:24px; }
+@media(max-width:700px) { .platform-payment-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+.legal-editor-toolbar { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+.legal-editor-content { min-height:380px; max-height:70vh; overflow:auto; padding:20px; border:1px solid #cfdbeb; border-radius:12px; background:#fff; line-height:1.7; overflow-wrap:anywhere; }
+.legal-editor-content:focus { outline:2px solid #8fbaff; outline-offset:2px; }
+.platform-header nav { flex-wrap:wrap; }

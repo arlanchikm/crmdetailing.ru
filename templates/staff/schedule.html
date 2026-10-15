@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}График — {{ current_tenant.name }}{% endblock %}
+{% block body_class %}schedule-page-body{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><h1>График</h1><p>В календаре записей показываются сотрудники, у которых есть смена на выбранную дату</p></div></div>
+<div class="calendar-toolbar schedule-toolbar"><div class="schedule-week-nav"><a class="button icon-button" aria-label="Предыдущая неделя" href="?week={{ previous_week|date:'Y-m-d' }}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></a><strong>{{ week_start|date:"d.m" }}–{{ week_end|date:"d.m.Y" }}</strong><a class="button icon-button" aria-label="Следующая неделя" href="?week={{ next_week|date:'Y-m-d' }}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a></div><a class="button ghost schedule-current-week" href="{% url 'staff-schedule' %}"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg> Текущая неделя</a></div>
+{% if errors %}<div class="form-error">{% for error in errors %}<div>{{ error }}</div>{% endfor %}</div>{% endif %}
+<form method="post" class="schedule-form">{% csrf_token %}
+  {% if can_manage %}<div class="form-actions schedule-form-actions"><button class="button primary" name="action" value="save">Сохранить график</button><button class="button ghost" name="action" value="copy_previous">Скопировать прошлую неделю</button></div>{% endif %}
+  <div class="mobile-schedule-employees" role="tablist" aria-label="Сотрудники">
+    {% for row in rows %}<button type="button" role="tab" data-schedule-employee="{{ row.employee.id }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" class="{% if forloop.first %}active{% endif %}"><span class="schedule-employee-avatar">{{ row.employee.name|first }}</span><span><strong>{{ row.employee.name }}</strong><small>{{ row.employee.display_position }}</small></span></button>{% endfor %}
+  </div>
+  <div class="table-card schedule-table"><table><thead><tr><th>Сотрудник</th>{% for day in days %}<th>{{ day|date:"D" }}<small>{{ day|date:"d.m" }}</small></th>{% endfor %}</tr></thead><tbody>{% for row in rows %}<tr data-schedule-row="{{ row.employee.id }}" class="{% if forloop.first %}is-mobile-selected{% endif %}"><td class="schedule-employee-heading"><strong>{{ row.employee.name }}</strong><small>{{ row.employee.display_position }}</small></td>{% for cell in row.days %}<td data-day-name="{{ cell.date|date:'D' }}" data-day-date="{{ cell.date|date:'d.m' }}"><span class="mobile-schedule-date"><b>{{ cell.date|date:"D" }}</b><small>{{ cell.date|date:"d.m" }}</small></span><label class="shift-cell{% if cell.hours.is_closed %} shift-cell-closed{% endif %}"><span class="shift-toggle"><input type="checkbox" name="shift_{{ row.employee.id }}_{{ cell.date|date:'Y-m-d' }}" {% if cell.shift %}checked{% endif %} {% if not can_manage or cell.hours.is_closed %}disabled{% endif %}><b>{% if cell.hours.is_closed %}Компания закрыта{% else %}Работает{% endif %}</b></span>{% if not cell.hours.is_closed %}<input type="time" min="{{ cell.hours.opens_at|time:'H:i' }}" max="{{ cell.hours.closes_at|time:'H:i' }}" name="shift_{{ row.employee.id }}_{{ cell.date|date:'Y-m-d' }}_start" value="{% if cell.shift %}{{ cell.shift.start_time|time:'H:i' }}{% else %}{{ cell.hours.opens_at|time:'H:i' }}{% endif %}" {% if not can_manage %}disabled{% endif %}><input type="time" min="{{ cell.hours.opens_at|time:'H:i' }}" max="{{ cell.hours.closes_at|time:'H:i' }}" name="shift_{{ row.employee.id }}_{{ cell.date|date:'Y-m-d' }}_end" value="{% if cell.shift %}{{ cell.shift.end_time|time:'H:i' }}{% else %}{{ cell.hours.closes_at|time:'H:i' }}{% endif %}" {% if not can_manage %}disabled{% endif %}>{% endif %}</label></td>{% endfor %}</tr>{% empty %}<tr><td colspan="8" class="empty">Сначала добавьте сотрудника.</td></tr>{% endfor %}</tbody></table></div>
+</form>
+<script>
+document.querySelectorAll('[data-schedule-employee]').forEach(button => button.addEventListener('click', () => {
+  const id = button.dataset.scheduleEmployee;
+  document.querySelectorAll('[data-schedule-employee]').forEach(item => {
+    const selected = item === button;
+    item.classList.toggle('active', selected);
+    item.setAttribute('aria-selected', selected ? 'true' : 'false');
+  });
+  document.querySelectorAll('[data-schedule-row]').forEach(row => row.classList.toggle('is-mobile-selected', row.dataset.scheduleRow === id));
+}));
+</script>
+{% endblock %}

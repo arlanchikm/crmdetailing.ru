@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% load crm_numbers %}
+{% block title %}История расходников — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><a class="back-link" href="{% url 'consumable-list' %}">← Расходники</a><h1>История движений</h1><p>Поступления, списания, корректировки и инвентаризации</p></div></div>
+<div class="table-card"><table><thead><tr><th>Дата</th><th>Расходник</th><th>Операция</th><th>План</th><th>Факт</th><th>Причина</th><th>Пользователь</th></tr></thead><tbody>{% for row in movements %}<tr><td>{{ row.created_at|date:"d.m.Y H:i" }}</td><td><strong>{{ row.consumable.name }}</strong></td><td>{{ row.get_kind_display }}{% if row.appointment %}<small class="table-subtitle"><a href="{% url 'appointment-detail' row.appointment.id %}">Запись {{ row.appointment.start_at|date:"d.m H:i" }}</a></small>{% endif %}</td><td>{{ row.planned_delta|trim_decimal }} → {{ row.planned_after|trim_decimal }}</td><td>{{ row.actual_delta|trim_decimal }} → {{ row.actual_after|trim_decimal }}</td><td>{{ row.reason|default:"—" }}</td><td>{{ row.created_by.email|default:"Система" }}</td></tr>{% empty %}<tr><td colspan="7" class="empty">Движений пока нет.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

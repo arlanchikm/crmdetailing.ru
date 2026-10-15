@@ -1,0 +1,11 @@
+<div class="visit-history">
+  {% for visit in visits %}
+  <a class="visit-row" href="{% url 'appointment-detail' visit.id %}">
+    <time>{{ visit.start_at|date:"d.m.Y" }}<small>{{ visit.start_at|date:"H:i" }}–{{ visit.end_at|date:"H:i" }}</small></time>
+    <span><strong>{{ visit.car_display }}</strong><small>{% for item in visit.items.all %}{{ item.display_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</small></span>
+    <span>{% for assignment in visit.assignees.all %}{{ assignment.employee.name }}{% if not forloop.last %}, {% endif %}{% empty %}{% if visit.employee %}{{ visit.employee.name }}{% else %}Не назначен{% endif %}{% endfor %}<small>{% if visit.post %}{{ visit.post.name }}{% else %}Без поста{% endif %}</small></span>
+    <span class="status-pill status-{{ visit.status }}">{{ visit.get_status_display }}</span>
+    <strong>{{ visit.total|floatformat:0 }} ₽</strong>
+  </a>
+  {% empty %}<div class="empty">{{ empty_text }}</div>{% endfor %}
+</div>

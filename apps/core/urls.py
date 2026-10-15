@@ -1,0 +1,51 @@
+from django.urls import path
+
+from . import views, billing, platform, booking, booking_appearance
+from . import import_views, notifications, booking_links
+from apps.accounts.security import security_settings
+from apps.tenants.access import tenant_member_required
+
+urlpatterns = [
+    path("integrations/form/qr/", booking_links.booking_qr, name="booking-qr"),
+    path('integrations/form/',booking_appearance.appearance_editor,name='booking-appearance'),
+    path('integrations/form/preview/',booking_appearance.appearance_preview,name='booking-appearance-preview'),
+    path('booking/<uuid:token>/background/',booking_appearance.background_image,name='booking-background'),
+    path('data/import/',import_views.import_index,name='import-index'),
+    path('data/import/<uuid:batch_id>/',import_views.import_detail,name='import-detail'),
+    path('data/import/<uuid:batch_id>/report/',import_views.import_report,name='import-report'),
+    path('data/import/guide/<str:kind>/',import_views.import_guide,name='import-guide'),
+    path('data/import/template/<str:kind>/',import_views.import_template,name='import-template'),
+    path('account/security/',tenant_member_required(security_settings),name='security-settings'),
+    path('notifications/settings/',notifications.notification_settings,name='notification-settings'),
+    path('notifications/feed/',notifications.notification_feed,name='notification-feed'),
+    path('notifications/push/subscribe/',notifications.push_subscribe,name='push-subscribe'),
+    path('notifications/push/unsubscribe/',notifications.push_unsubscribe,name='push-unsubscribe'),
+    path('manifest.webmanifest',notifications.web_manifest,name='web-manifest'),
+    path('crm-sw.js',notifications.service_worker,name='service-worker'),
+    path("company/export/", billing.company_export, name="company-export"),
+    path("booking/<uuid:token>/class/<uuid:class_id>/image/", booking.class_image, name="booking-class-image"),
+    path("network-request/", billing.network_request, name="network-request"),
+    path("legal/<slug:document_slug>/", views.legal_document, name="legal-document"),
+    path("booking/<uuid:token>/availability/", booking.availability_view, name="booking-availability"),
+    path("local/<slug:slug>/", views.local_tenant_entry, name="local-tenant-entry"),
+    path("local-exit/", views.local_tenant_exit, name="local-tenant-exit"),
+    path("", views.landing, name="landing"),
+    path("app/", views.dashboard, name="dashboard"),
+    path("profile/settings/", views.profile_settings, name="profile-settings"),
+    path("company/settings/", views.company_settings, name="company-settings"),
+    path("interface/settings/", views.interface_settings, name="interface-settings"),
+    path("integrations/settings/", views.integration_settings, name="integration-settings"),
+    path("subscription/settings/", views.subscription_settings, name="subscription-settings"),
+    path("subscription/payment/return/", billing.yookassa_return, name="yookassa-return"),
+    path("payments/yookassa/webhook/", billing.yookassa_webhook, name="yookassa-webhook"),
+    path("locations/settings/", views.location_settings, name="location-settings"),
+    path("locations/select/", views.select_location, name="select-location"),
+    path("booking/<uuid:token>/", views.booking_widget, name="booking-widget"),
+    path("app/detect-timezone/", views.detect_timezone, name="detect-timezone"),
+    path("health/", views.health, name="health"),
+    path("internal/tls/allow/", views.tls_domain_allowed, name="tls-domain-allowed"),
+    path("audit/", views.audit_log, name="audit-log"),
+    path("notifications/", views.notification_list, name="notification-list"),
+    path("notifications/read/", views.notification_read, name="notification-read-all"),
+    path("notifications/<uuid:notification_id>/read/", views.notification_read, name="notification-read"),
+]

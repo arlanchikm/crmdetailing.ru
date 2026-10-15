@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Рабочие посты — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading planner-page-heading"><div><h1>Рабочие посты</h1><p>То же расписание, сгруппированное по рабочим постам</p></div>{% if tenant_permissions.settings_manage %}<a class="button dark mobile-create-action" href="{% url 'post-create' %}" aria-label="Новый рабочий пост">+ Новый пост</a>{% endif %}</div>
+{% include "operations/_calendar_board.html" %}
+{% if tenant_permissions.settings_manage %}<div class="card-grid post-settings-grid">{% for post in posts %}<article class="info-card post-card"><div><span class="status-pill {% if not post.active %}inactive{% endif %}">{% if post.active %}Активен{% else %}Отключен{% endif %}</span><h2>{{ post.name }}</h2><p>{{ post.get_kind_display }}</p></div><a href="{% url 'post-edit' post.id %}">Настроить →</a></article>{% endfor %}</div>{% endif %}
+{% endblock %}

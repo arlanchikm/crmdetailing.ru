@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Записи — {{ current_tenant.name }}{% endblock %}
+{% block body_class %}appointment-calendar-body{% endblock %}
+{% block crm_content %}
+<div class="page-heading planner-page-heading"><div><h1>Записи</h1><p data-calendar-heading-description>{% if resource_kind == 'post' %}Расписание рабочих постов.{% else %}Расписание сотрудников.{% endif %} Нажмите на время или перетащите запись мышью</p></div>{% if tenant_permissions.appointments_manage %}<a class="button primary large-button js-appointment-create" href="{% url 'appointment-create' %}?date={{ selected_date|date:'Y-m-d' }}" data-modal-url="{% url 'appointment-create' %}?date={{ selected_date|date:'Y-m-d' }}&amp;modal=1"><span class="plus">＋</span> Новая запись</a>{% endif %}</div>
+{% if tenant_permissions.appointments_manage %}<a class="mobile-page-fab js-appointment-create" href="{% url 'appointment-create' %}?date={{ selected_date|date:'Y-m-d' }}" data-modal-url="{% url 'appointment-create' %}?date={{ selected_date|date:'Y-m-d' }}&amp;modal=1" aria-label="Новая запись">＋</a>{% endif %}
+<div data-calendar-container>{% include "operations/_calendar_board.html" %}</div>
+<div class="modal-backdrop" id="appointment-modal" hidden><div class="modal-panel" role="dialog" aria-modal="true" aria-label="Карточка записи"><div class="modal-loading">Загрузка…</div></div></div>
+{% endblock %}

@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block title %}Новая затрата — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}<div class="page-heading"><div><a class="back-link" href="{% url 'analytics-dashboard' %}">← Аналитика</a><h1>Новая затрата</h1><p>Расходники сюда вносить не нужно: они считаются автоматически</p></div></div><form class="form-card" method="post">{% csrf_token %}{% for field in form %}<div class="field">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endfor %}<div class="form-actions"><button class="button primary">Добавить</button><a class="button ghost" href="{% url 'analytics-dashboard' %}">Отмена</a></div></form>{% endblock %}

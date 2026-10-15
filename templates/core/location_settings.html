@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Точки компании — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><h1>Точки компании</h1><p>Разделение сотрудников, записей, кассы и склада</p></div><a class="button secondary" href="{% url 'subscription-settings' %}">К тарифу</a></div>
+<section class="form-card settings-card">
+  <div class="simple-list">{% for location in locations %}<div><span><strong>{{ location.name }}</strong><small>{% if location.is_primary %}Основная точка{% elif not location.active %}Отключена{% endif %}</small></span>{% if can_manage_multiple and not location.is_primary and location.active %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="archive"><input type="hidden" name="location_id" value="{{ location.id }}"><button class="button danger small" type="submit">Отключить</button></form>{% endif %}</div>{% endfor %}</div>
+</section>
+{% if can_manage_multiple %}<form class="form-card settings-card" method="post">{% csrf_token %}<input type="hidden" name="action" value="create"><div class="section-heading compact-heading"><div><h2>Добавить точку</h2><p>На тарифе «Сеть» количество точек не ограничено</p></div></div><div class="field"><label for="location-name">Название точки</label><input id="location-name" name="name" required maxlength="160"></div><div class="form-actions"><button class="button primary" type="submit">Добавить точку</button></div></form>{% else %}<section class="tariff-inline-lock"><span>🔒</span><div><strong>Несколько точек доступны на тарифе «Сеть»</strong><p>Перейдите к тарифам, чтобы подключить управление сетью.</p></div><a class="button secondary" href="{% url 'subscription-settings' %}">Тарифы</a></section>{% endif %}
+{% endblock %}

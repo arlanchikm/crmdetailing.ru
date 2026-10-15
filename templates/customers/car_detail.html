@@ -1,0 +1,135 @@
+{% extends "base.html" %}{% load static l10n %}
+{% block title %}{{ car }} — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading">
+  <div><a class="back-link" href="{% url 'client-detail' car.client.id %}">← {{ car.client.display_name }}</a><h1>{{ car.make }} {{ car.model }}</h1><p>{{ car.plate|default:"Без госномера" }} · владелец {{ car.client.display_name }}</p></div>
+<div class="heading-actions">{% if not car.archived_at %}{% if tenant_permissions.clients_manage and not car.archived_at %}<a class="button" href="{% url 'car-edit' car.id %}">Редактировать</a>{% endif %}{% if tenant_permissions.clients_delete %}<form method="post" action="{% url 'car-archive' car.id %}">{% csrf_token %}<button class="button ghost danger-text" type="submit">Удалить</button></form>{% endif %}{% elif tenant_permissions.clients_delete %}<form method="post" action="{% url 'car-restore' car.id %}">{% csrf_token %}<button class="button primary" type="submit">Восстановить</button></form>{% endif %}{% if car.archived_at and tenant_permissions.clients_permanent_delete %}<form method="post" action="{% url 'car-permanent-delete' car.id %}" onsubmit="return confirm('Окончательно удалить автомобиль? Отменить это действие будет невозможно.')">{% csrf_token %}<button class="button danger" type="submit">Удалить окончательно</button></form>{% endif %}</div>
+</div>
+{% if car.archived_at %}<p class="deleted-notice">Автомобиль удалён. История посещений сохранена.</p>{% endif %}
+<div class="metric-grid client-metrics">
+  <article class="metric-card accent"><span>Посещений</span><strong>{{ visits_count }}</strong><small>завершённых записей</small></article>
+  <article class="metric-card"><span>Покупки</span><strong>{{ revenue|floatformat:0 }} ₽</strong><small>оплаченные работы</small></article>
+  <article class="metric-card"><span>Средний чек</span><strong>{{ average_check|floatformat:0 }} ₽</strong><small>по оплаченным визитам</small></article>
+  <article class="metric-card"><span>Последний визит</span><strong>{% if last_visit %}{{ last_visit|date:"d.m.Y" }}{% else %}—{% endif %}</strong><small>дата обслуживания</small></article>
+</div>
+<div class="detail-layout">
+  <section class="info-card"><h2>Автомобиль</h2><dl><div><dt>Марка и модель</dt><dd>{{ car.make }} {{ car.model }}</dd></div><div><dt>Класс</dt><dd>{{ car.vehicle_class.name|default:"Седан" }}</dd></div><div><dt>Госномер</dt><dd>{{ car.plate|default:"—" }}</dd></div><div><dt>VIN</dt><dd>{{ car.vin|default:"—" }}</dd></div><div><dt>Цвет</dt><dd>{{ car.color|default:"—" }}</dd></div></dl>{% if car.notes %}<h3>Заметки</h3><p>{{ car.notes|linebreaksbr }}</p>{% endif %}</section>
+  <section class="info-card"><h2>Клиент</h2><dl><div><dt>Имя</dt><dd><a class="table-link" href="{% url 'client-detail' car.client.id %}">{{ car.client.display_name }}</a></dd></div><div><dt>Телефон</dt><dd>{{ car.client.phone }}</dd></div><div><dt>Email</dt><dd>{{ car.client.email|default:"—" }}</dd></div></dl></section>
+</div>
+<section class="info-card damage-section">
+  <div class="section-heading"><div><h2>Повреждения кузова</h2><p>Нажмите на схему, чтобы отметить повреждение</p></div><span class="damage-count">{{ damage_rows|length }} отметок</span></div>
+  <div class="vehicle-map" data-damage-map>
+    <div class="vehicle-map-artwork"><img src="{% static 'img/vehicle-damage-map.webp' %}" alt="Схема автомобиля для отметки повреждений" draggable="false"></div>
+    {% for row in damage_rows %}<div class="damage-marker-wrap {% if row.damage.x_percent > 75 %}align-right{% endif %} {% if row.damage.y_percent > 65 %}align-bottom{% endif %}" style="left:{{ row.damage.x_percent|unlocalize }}%;top:{{ row.damage.y_percent|unlocalize }}%;" data-damage-marker data-y="{{ row.damage.y_percent|unlocalize }}">
+      <button class="damage-marker" type="button" aria-label="Открыть повреждение">×</button>
+      <article class="damage-popover" data-damage-popover hidden>
+        <button class="damage-popover-close" type="button" data-damage-close aria-label="Закрыть">×</button>
+        <strong>{{ row.damage.discovered_on|date:"d.m.Y" }}</strong><p>{{ row.damage.description|linebreaksbr }}</p>
+        {% if row.damage.photos.all %}<div class="damage-photos">{% for photo in row.damage.photos.all %}<div class="damage-photo"><button type="button" data-damage-photo data-src="{{ photo.file.url }}" aria-label="Открыть фотографию"><img src="{{ photo.file.url }}" alt="Фото повреждения" loading="lazy" decoding="async"></button>{% if tenant_permissions.clients_manage and not car.archived_at %}<form method="post" action="{% url 'car-damage-photo-delete' car.id row.damage.id photo.id %}" onsubmit="return confirm('Удалить эту фотографию?')">{% csrf_token %}<button type="submit" aria-label="Удалить фотографию">×</button></form>{% endif %}</div>{% endfor %}</div>{% endif %}
+        {% if tenant_permissions.clients_manage and not car.archived_at %}<div class="damage-actions"><button class="text-button" type="button" data-damage-edit-toggle>Изменить</button><form method="post" action="{% url 'car-damage-delete' car.id row.damage.id %}">{% csrf_token %}<button class="text-button danger-text" type="submit">Удалить</button></form></div>
+        <form class="damage-edit-form" method="post" enctype="multipart/form-data" action="{% url 'car-damage-edit' car.id row.damage.id %}" data-damage-edit-form hidden>{% csrf_token %}{{ row.form.x_percent }}{{ row.form.y_percent }}<div class="field">{{ row.form.discovered_on.label_tag }}{{ row.form.discovered_on }}</div><div class="field">{{ row.form.description.label_tag }}{{ row.form.description }}</div><div class="field">{{ row.form.photos.label_tag }}{{ row.form.photos }}<small class="help-text">{{ row.form.photos.help_text }}</small></div><div class="form-actions"><button class="button primary small" type="submit">Сохранить</button><button class="button secondary small" type="button" data-damage-edit-cancel>Отмена</button></div></form>{% endif %}
+      </article>
+    </div>{% endfor %}
+    {% if tenant_permissions.clients_manage and not car.archived_at %}<article class="damage-create-popover" data-damage-create hidden>
+      <button class="damage-popover-close" type="button" data-damage-create-close aria-label="Закрыть">×</button><strong>Новое повреждение</strong>
+      <form method="post" enctype="multipart/form-data" action="{% url 'car-damage-create' car.id %}">{% csrf_token %}{{ damage_form.x_percent }}{{ damage_form.y_percent }}<div class="field">{{ damage_form.discovered_on.label_tag }}{{ damage_form.discovered_on }}</div><div class="field">{{ damage_form.description.label_tag }}{{ damage_form.description }}</div><div class="field">{{ damage_form.photos.label_tag }}{{ damage_form.photos }}<small class="help-text">{{ damage_form.photos.help_text }}</small></div><button class="button primary small" type="submit">Добавить</button></form>
+    </article>{% endif %}
+  </div>
+</section>
+<div class="damage-lightbox" data-damage-lightbox hidden role="dialog" aria-modal="true" aria-label="Фотография повреждения"><button type="button" class="damage-lightbox-close" data-lightbox-close aria-label="Закрыть">×</button><button type="button" class="damage-lightbox-nav previous" data-lightbox-previous aria-label="Предыдущая фотография">‹</button><img src="" alt="Фото повреждения крупным планом" data-lightbox-image><button type="button" class="damage-lightbox-nav next" data-lightbox-next aria-label="Следующая фотография">›</button></div>
+<section class="info-card history-card car-visit-history"><div class="section-heading"><div><h2>История посещений</h2><p>Услуги, исполнители, стоимость, комментарий и оценка</p></div></div>
+  <div class="table-card embedded-table"><table><thead><tr><th>Дата</th><th>Услуги</th><th>Исполнители</th><th>Стоимость</th><th>Комментарий</th><th>Оценка</th></tr></thead><tbody>{% for row in visits %}<tr><td><a class="table-link" href="{% url 'appointment-detail' row.id %}">{{ row.start_at|date:"d.m.Y H:i" }}</a></td><td>{% for item in row.items.all %}{{ item.display_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td><td>{% for assignment in row.assignees.all %}{{ assignment.employee.name }}{% if not forloop.last %}, {% endif %}{% empty %}{{ row.employee.name|default:"—" }}{% endfor %}</td><td>{{ row.total|floatformat:0 }} ₽</td><td>{{ row.comment|default:"—"|truncatechars:80 }}</td><td>{% if row.rating %}{{ row.rating.score }}/5{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="6" class="empty">У автомобиля пока нет завершённых посещений.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+<script>
+(() => {
+  const map = document.querySelector('[data-damage-map]'); if (!map) return;
+  const create = map.querySelector('[data-damage-create]');
+  const markers = Array.from(map.querySelectorAll('[data-damage-marker]'));
+  const panels = new Map(markers.map(marker => [marker, marker.querySelector('[data-damage-popover]')]));
+  const spacer = document.createElement('div');
+  spacer.className = 'damage-panel-space'; map.after(spacer);
+  const anchors = new WeakMap();
+  panels.forEach((panel, marker) => { map.appendChild(panel); anchors.set(panel, marker); });
+  const reserveSpace = () => {
+    let extra = 0;
+    [...panels.values(), create].filter(Boolean).forEach(panel => {
+      if (!panel.hidden) extra = Math.max(extra, panel.offsetTop + panel.offsetHeight - map.offsetHeight + 16);
+    });
+    spacer.style.height = `${Math.max(0, extra)}px`;
+  };
+  const placePanel = (panel, anchor, reveal = false) => {
+    window.scrollTo({top: window.scrollY, behavior: 'instant'});
+    panel.hidden = false;
+    const bounds = map.getBoundingClientRect();
+    const marker = anchor instanceof Element ? anchor.getBoundingClientRect() : anchor;
+    const margin = 15, width = panel.offsetWidth, height = panel.offsetHeight;
+    const safeTop = document.querySelector('.mobile-topbar')?.getBoundingClientRect().bottom || margin;
+    const minTop = Math.max(margin, safeTop + 8);
+    let left = marker.right + 12;
+    if (left + width > window.innerWidth - margin) left = marker.left - width - 12;
+    left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+    let top = marker.top;
+    if (left < marker.right && left + width > marker.left) top = marker.bottom + 12;
+    if (top + height > window.innerHeight - margin) top = marker.top - height - 12;
+    if (height <= window.innerHeight - minTop - margin) top = Math.max(minTop, Math.min(top, window.innerHeight - height - margin));
+    else top = minTop;
+    panel.style.left = `${left - bounds.left}px`;
+    panel.style.top = `${top - bounds.top}px`;
+    reserveSpace();
+    if (reveal) requestAnimationFrame(() => {
+      const rect = panel.getBoundingClientRect();
+      if (rect.top < minTop || rect.bottom > window.innerHeight - margin) window.scrollBy({top: rect.top - minTop, behavior: 'instant'});
+    });
+  };
+  markers.forEach(marker => { marker.style.top = `${Math.max(1, Math.min(99, (Number(marker.dataset.y) * 1086 / 100 - 170) / 736 * 100))}%`; });
+  const hideTimers = new WeakMap();
+  const pinned = new WeakSet();
+  const cancelHide = panel => { const timer = hideTimers.get(panel); if (timer) clearTimeout(timer); hideTimers.delete(panel); panel.classList.remove('is-fading'); };
+  const closePanel = (panel, immediate = false) => {
+    cancelHide(panel); const form = panel.querySelector('[data-damage-edit-form]');
+    if (!immediate && (pinned.has(panel) || form && !form.hidden)) return;
+    const finish = () => { panel.hidden = true; pinned.delete(panel); anchors.get(panel)?.classList.remove('is-open'); panel.classList.remove('is-fading'); reserveSpace(); };
+    if (immediate) { finish(); return; }
+    const timer = setTimeout(() => { panel.classList.add('is-fading'); setTimeout(finish, 150); }, 400); hideTimers.set(panel, timer);
+  };
+  const showPanel = (marker, reveal = false) => {
+    const panel = panels.get(marker); if (!panel) return;
+    if (!panel.hidden) { cancelHide(panel); if (reveal) pinned.add(panel); return; }
+    panels.forEach((other, otherMarker) => { if (other !== panel) closePanel(other, true); otherMarker.classList.remove('is-open'); });
+    if (create) create.hidden = true;
+    if (reveal) pinned.add(panel);
+    cancelHide(panel); marker.classList.add('is-open'); placePanel(panel, marker, reveal);
+  };
+  const hitAreas = [[[3,18],[18,18],[22,30],[22,70],[18,83],[3,83],[1,70],[1,30]],[[23,35],[26,31],[38,26],[59,25],[68,29],[73,36],[72,45],[65,48],[31,48],[23,43]],[[75,31],[78,26],[94,26],[98,31],[97,47],[76,47]],[[23,62],[26,59],[39,54],[59,54],[67,58],[73,66],[72,75],[31,76],[24,71]],[[75,60],[78,54],[94,54],[98,60],[97,77],[76,77]]];
+  const point = event => { const rect = map.querySelector('img').getBoundingClientRect(); return {x:(event.clientX-rect.left)/rect.width*100,y:(event.clientY-rect.top)/rect.height*100}; };
+  const inPolygon = ({x,y},points) => points.reduce((inside,current,index) => { const previous=points[(index+points.length-1)%points.length]; const crosses=(current[1]>y)!==(previous[1]>y)&&x<(previous[0]-current[0])*(y-current[1])/(previous[1]-current[1])+current[0]; return crosses?!inside:inside; },false);
+  const validPoint = value => hitAreas.some(area => inPolygon(value, area));
+  map.addEventListener('mousemove', event => map.classList.toggle('valid-target', validPoint(point(event))));
+  map.addEventListener('mouseleave', () => map.classList.remove('valid-target'));
+  map.addEventListener('click', event => {
+    const marker = event.target.closest('[data-damage-marker]');
+    if (marker) { if (!event.target.closest('form, a, [data-damage-edit-toggle], [data-damage-close]')) showPanel(marker, true); return; }
+    if (!create || event.target.closest('[data-damage-create], [data-damage-popover]')) return;
+    const value = point(event); if (!validPoint(value)) return;
+    create.querySelector('[name="new-x_percent"]').value = value.x.toFixed(2); create.querySelector('[name="new-y_percent"]').value = value.y.toFixed(2);
+    panels.forEach(panel => closePanel(panel, true));
+    anchors.set(create, {left:event.clientX,right:event.clientX,top:event.clientY,bottom:event.clientY});
+    placePanel(create, anchors.get(create), true);
+  });
+  panels.forEach((panel, marker) => {
+    panel.querySelector('[data-damage-close]')?.addEventListener('click', event => { event.stopPropagation(); closePanel(panel, true); });
+    marker.addEventListener('mouseenter', () => { if (window.innerWidth > 760 && matchMedia('(hover: hover)').matches) showPanel(marker); }); marker.addEventListener('mouseleave', () => { if (window.innerWidth > 760) closePanel(panel); });
+    marker.querySelector('button')?.addEventListener('focus', event => { if (event.target.matches(':focus-visible')) showPanel(marker, true); }); panel.addEventListener('mouseenter', () => cancelHide(panel)); panel.addEventListener('mouseleave', () => { if (window.innerWidth > 760) closePanel(panel); });
+    panel.querySelector('[data-damage-edit-toggle]')?.addEventListener('click', event => { event.stopPropagation(); cancelHide(panel); panel.classList.add('is-editing'); panel.querySelector('[data-damage-edit-form]').hidden = false; placePanel(panel, marker, true); });
+    panel.querySelector('[data-damage-edit-cancel]')?.addEventListener('click', () => { const form=panel.querySelector('[data-damage-edit-form]'); form.reset(); form.hidden=true; panel.classList.remove('is-editing'); placePanel(panel, marker); });
+  });
+  create?.querySelector('[data-damage-create-close]')?.addEventListener('click', event => { event.stopPropagation(); create.hidden = true; reserveSpace(); });
+  window.addEventListener('resize', () => { panels.forEach((panel, marker) => { if (!panel.hidden) placePanel(panel, marker); }); if (create && !create.hidden) { const bounds=map.getBoundingClientRect(); placePanel(create,{left:bounds.left+map.clientWidth*Number(create.querySelector('[name="new-x_percent"]').value)/100,right:bounds.left+map.clientWidth*Number(create.querySelector('[name="new-x_percent"]').value)/100,top:bounds.top,bottom:bounds.top}); } });
+  const lightbox=document.querySelector('[data-damage-lightbox]'), image=lightbox?.querySelector('[data-lightbox-image]'); const photos=Array.from(document.querySelectorAll('[data-damage-photo]')); let index=0;
+  const showPhoto=value => { if(!lightbox||!photos.length)return; index=(value+photos.length)%photos.length; image.src=photos[index].dataset.src; lightbox.hidden=false; document.body.classList.add('modal-open'); };
+  photos.forEach((button,value)=>button.addEventListener('click',event=>{event.stopPropagation();showPhoto(value);}));
+  const closeLightbox=()=>{if(!lightbox)return;lightbox.hidden=true;image.src='';document.body.classList.remove('modal-open');};
+  lightbox?.querySelector('[data-lightbox-close]')?.addEventListener('click',closeLightbox); lightbox?.querySelector('[data-lightbox-previous]')?.addEventListener('click',event=>{event.stopPropagation();showPhoto(index-1);}); lightbox?.querySelector('[data-lightbox-next]')?.addEventListener('click',event=>{event.stopPropagation();showPhoto(index+1);}); lightbox?.addEventListener('click',event=>{if(event.target===lightbox||event.target===image)closeLightbox();});
+})();
+</script>
+{% endblock %}

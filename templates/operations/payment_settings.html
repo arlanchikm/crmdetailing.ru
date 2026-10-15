@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block title %}Комиссии оплаты — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}<div class="page-heading"><div><h1>Комиссии оплаты</h1><p>Комиссия фиксируется вместе с каждой новой оплатой</p></div></div><form class="form-card" method="post">{% csrf_token %}{% for field in form %}<div class="field">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endfor %}<div class="form-actions"><button class="button primary">Сохранить</button><a class="button ghost" href="{% url 'analytics-dashboard' %}">Отмена</a></div></form>{% endblock %}

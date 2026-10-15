@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ client.display_name }} — {{ current_tenant.name }}{% endblock %}
+{% block body_class %}client-detail-body{% endblock %}
+{% block crm_content %}
+{% if client.phone_needs_review %}<p class="phone-review-warning">Сохранённый телефон требует проверки. Уточните российский номер и обновите карточку клиента.</p>{% endif %}
+<div class="page-heading">
+  <div><a class="back-link" href="{% url 'client-list' %}">← Клиенты</a><h1>{{ client.display_name }}</h1><p>{{ client.phone }}{% if client.email %} · {{ client.email }}{% endif %}</p></div>
+<div class="heading-actions">{% if not client.archived_at %}{% if tenant_permissions.clients_manage %}<a class="button" href="{% url 'client-edit' client.id %}">Редактировать</a>{% endif %}{% if tenant_permissions.clients_delete %}<form method="post" action="{% url 'client-archive' client.id %}">{% csrf_token %}<button class="button ghost danger-text" type="submit">Удалить</button></form>{% endif %}{% elif tenant_permissions.clients_delete %}<form method="post" action="{% url 'client-restore' client.id %}">{% csrf_token %}<button class="button primary" type="submit">Восстановить</button></form>{% endif %}{% if client.archived_at and tenant_permissions.clients_permanent_delete %}<form method="post" action="{% url 'client-permanent-delete' client.id %}" onsubmit="return confirm('Окончательно удалить клиента и все его автомобили? Отменить это действие будет невозможно.')">{% csrf_token %}<button class="button danger" type="submit">Удалить окончательно</button></form>{% endif %}</div>
+</div>
+{% if client.archived_at %}<p class="deleted-notice">Клиент удалён. Записи и оплаты сохранены.</p>{% endif %}
+<div class="metric-grid client-metrics">
+  <article class="metric-card accent"><span>Посещений</span><strong>{{ visits_count }}</strong><small>завершённых записей</small></article>
+  <article class="metric-card"><span>Покупки</span><strong>{{ revenue|floatformat:0 }} ₽</strong><small>оплаченные работы</small></article>
+  <article class="metric-card"><span>Средний чек</span><strong>{{ average_check|floatformat:0 }} ₽</strong><small>по оплаченным визитам</small></article>
+  <article class="metric-card"><span>Последний визит</span><strong>{% if last_visit %}{{ last_visit|date:"d.m.Y" }}{% else %}—{% endif %}</strong><small>дата обслуживания</small></article>
+</div>
+{% if client.notes %}<div class="info-card"><h2>Заметки</h2><p>{{ client.notes|linebreaksbr }}</p></div>{% endif %}
+<div class="section-heading">
+  <h2>Автомобили</h2>
+  {% if tenant_permissions.clients_manage and not client.archived_at %}<a class="button dark" href="{% url 'car-create' client.id %}">+ Добавить автомобиль</a>{% endif %}
+</div>
+<div class="card-grid">
+  {% for car in visible_cars %}
+    <article class="info-card {% if car.archived_at %}deleted-car{% endif %}">
+      {% if car.archived_at %}<span class="status-pill inactive">Удалён</span>{% endif %}<h3><a class="table-link" href="{% url 'car-detail' car.id %}">{{ car.make }} {{ car.model }}</a></h3>
+      <dl>
+        <div><dt>Госномер</dt><dd>{{ car.plate|default:"—" }}</dd></div>
+        <div><dt>Цвет</dt><dd>{{ car.color|default:"—" }}</dd></div>
+        <div><dt>VIN</dt><dd>{{ car.vin|default:"—" }}</dd></div>
+      </dl>
+      {% if car.notes %}<p class="muted">{{ car.notes }}</p>{% endif %}
+      <a class="text-action" href="{% url 'car-detail' car.id %}">Открыть карточку →</a>{% if tenant_permissions.clients_delete and car.archived_at and not client.archived_at %}<form method="post" action="{% url 'car-restore' car.id %}" class="card-restore">{% csrf_token %}<button class="button secondary small">Восстановить</button></form>{% endif %}
+    </article>
+  {% empty %}
+    <div class="empty-card">У клиента пока нет автомобилей.</div>
+  {% endfor %}
+</div>
+{% if deleted_cars and tenant_permissions.clients_delete %}<div class="section-heading"><h2>Удалённые автомобили</h2></div><div class="card-grid deleted-car-grid">{% for car in deleted_cars %}<article class="info-card deleted-car deleted-car-card"><div><h3><a class="table-link" href="{% url 'car-detail' car.id %}">{{ car.make }} {{ car.model }}</a></h3><p>{{ car.plate|default:"Без госномера" }}</p></div><div class="deleted-car-actions">{% if not client.archived_at %}<form method="post" action="{% url 'car-restore' car.id %}">{% csrf_token %}<button class="button secondary small">Восстановить</button></form>{% else %}<p class="muted">Сначала восстановите клиента.</p>{% endif %}{% if tenant_permissions.clients_permanent_delete %}<form method="post" action="{% url 'car-permanent-delete' car.id %}" onsubmit="return confirm('Окончательно удалить автомобиль? Отменить это действие будет невозможно.')">{% csrf_token %}<button class="button danger small" type="submit">Удалить окончательно</button></form>{% endif %}</div></article>{% endfor %}</div>{% endif %}
+<div class="section-heading"><div><h2>История посещений</h2><p>Завершенные работы клиента</p></div></div>
+<section class="info-card history-card">
+  {% include "operations/_visit_history.html" with visits=visits empty_text="У клиента пока нет посещений." %}
+</section>
+{% endblock %}

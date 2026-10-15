@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Интерфейс — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><h1>Настройки</h1><p>Язык и цвета компании, а также тема этого устройства</p></div></div>
+<nav class="settings-tabs" aria-label="Разделы настроек"><a href="{% url 'profile-settings' %}">Настройки пользователя</a><a href="{% url 'company-settings' %}">Настройки компании</a><a class="active" href="{% url 'interface-settings' %}">Интерфейс</a></nav>
+<section class="form-card wide-form settings-card interface-settings-form device-theme-card">
+  <div class="section-heading compact-heading"><div><h2>Оформление на этом устройстве</h2><p>Выбор сохраняется только в этом браузере и не меняет интерфейс коллег.</p></div></div>
+  <div class="interface-theme-options" role="radiogroup" aria-label="Оформление на этом устройстве">
+    <button class="interface-theme-option" type="button" data-interface-theme="light_blue" role="radio" aria-checked="true"><span class="theme-swatch light"></span><span>Светлая</span></button>
+    <button class="interface-theme-option" type="button" data-interface-theme="dark" role="radio" aria-checked="false"><span class="theme-swatch dark"></span><span>Тёмная</span></button>
+  </div>
+</section>
+{% if can_customize_company_interface %}<form class="form-card wide-form settings-card interface-settings-form" method="post">
+  {% csrf_token %}
+  <div class="section-heading compact-heading"><div><h2>Оформление компании</h2><p>Язык и цвета применяются ко всем страницам компании после сохранения.</p></div></div>
+  <div class="form-grid interface-choice-grid">
+    <div class="field">{{ interface_form.language_code.label_tag }}{{ interface_form.language_code }}{% for error in interface_form.language_code.errors %}<small class="error-text">{{ error }}</small>{% endfor %}</div>
+  </div>
+  <div class="section-heading compact-heading interface-colors-heading"><div><h3>Цвета</h3><p>Изменения применяются ко всем страницам компании после сохранения</p></div></div>
+  <div class="interface-color-grid">
+    {% for field in interface_form %}{% if field.name == 'primary_color' or field.name == 'background_color' %}<label class="interface-color-field"><span>{{ field.label }}</span>{{ field }}<small>{{ field.value }}</small>{% for error in field.errors %}<small class="error-text">{{ error }}</small>{% endfor %}</label>{% endif %}{% endfor %}
+  </div>
+  {% for error in interface_form.non_field_errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+  <div class="form-actions"><button class="button primary" type="submit">Сохранить интерфейс</button></div>
+</form>{% endif %}
+{% endblock %}

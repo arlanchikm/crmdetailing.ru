@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Клиенты — {{ current_tenant.name }}{% endblock %}
+{% block body_class %}client-list-body{% endblock %}
+{% block crm_content %}
+<div class="page-heading">
+  <div><h1>Клиенты</h1><p>Клиентская база и автомобили</p></div>
+  {% if tenant_permissions.clients_manage %}<a class="button dark mobile-create-action" href="{% url 'client-create' %}" aria-label="Новый клиент">+ Новый клиент</a>{% endif %}
+</div>
+{% if tenant_permissions.clients_delete %}<nav class="list-tabs"><a href="{% url 'client-list' %}" {% if not archived %}class="active"{% endif %}>Действующие</a><a href="?archived=1" {% if archived %}class="active"{% endif %}>Удалённые</a></nav>{% endif %}
+<form class="toolbar" method="get">
+  {% if archived %}<input type="hidden" name="archived" value="1">{% endif %}
+  <input class="search" name="q" value="{{ query }}" placeholder="Имя, телефон, автомобиль или госномер">
+  <button class="button" type="submit">Найти</button>
+  {% if query %}<a class="button ghost" href="{% url 'client-list' %}">Сбросить</a>{% endif %}
+</form>
+<div class="table-card">
+  <table>
+    <thead><tr><th>Клиент</th><th>Телефон</th><th>Автомобили</th><th>Email</th><th></th></tr></thead>
+    <tbody>
+      {% for client in clients %}
+        <tr>
+          <td><a class="table-link" href="{% url 'client-detail' client.id %}">{{ client.display_name }}</a></td>
+          <td>{{ client.phone }}</td>
+          <td>{% for car in client.active_cars %}{{ car.make }} {{ car.model }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="muted">Нет</span>{% endfor %}</td>
+          <td>{{ client.email|default:"—" }}</td>
+          <td class="actions"><a href="{% url 'client-detail' client.id %}">Открыть →</a></td>
+        </tr>
+      {% empty %}
+        <tr><td class="empty" colspan="5">{% if archived %}Удалённых клиентов нет.{% else %}Клиенты пока не добавлены.{% endif %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

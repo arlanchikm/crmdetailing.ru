@@ -1,0 +1,55 @@
+<div class="modal-head">
+  <div><span class="eyebrow">Новая запись</span><h2>Создание записи</h2><p>Данные клиента сохранятся в базе автоматически</p></div>
+  <button class="modal-close" type="button" data-modal-close aria-label="Закрыть">×</button>
+</div>
+<form class="modal-form{% if request.GET.modal == '1' %} js-modal-form{% endif %} appointment-create-form" method="post" action="{% url 'appointment-create' %}{% if request.GET.modal == '1' %}?modal=1{% endif %}" autocomplete="off" data-appointment-create>
+  {% csrf_token %}{{ form.client }}{{ form.car }}{{ form.car_make }}{{ form.car_model }}
+  {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="appointment-create-columns">
+    <section class="appointment-create-column appointment-work-column">
+      <div class="modal-section-title"><div><h3>Запись</h3><p>Время, место и содержание работ</p></div></div>
+      <div class="form-grid">
+        <div class="field">{{ form.start_at.label_tag }}{{ form.start_at }}{% for error in form.start_at.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+        <div class="field">{{ form.end_at.label_tag }}{{ form.end_at }}{% for error in form.end_at.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+        <div class="field">{{ form.post.label_tag }}{{ form.post }}{% for error in form.post.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+      </div>
+      <div class="field service-choice-field">
+        <label>Услуги</label>
+        <div class="service-list-window" data-service-list-window>
+          <div class="service-card-list">
+            {% for row in service_rows %}{% with service=row.service service_id=row.service.id|stringformat:"s" %}<div class="service-select-card" data-has-class-choice="{{ row.has_class_choice|yesno:'1,0' }}"><label><input type="checkbox" name="services" value="{{ service.id }}" data-duration="{{ service.duration_minutes }}" data-price="{{ service.price }}" data-system-key="{{ service.system_key }}" data-calculation-type="{{ service.calculation_type }}" {% if service_id in selected_service_ids %}checked{% endif %}><span class="service-check">✓</span><span><strong>{{ service.name }}</strong><small>{% if service.system_key == 'other' %}Стоимость и время указываются в записи{% else %}<b data-service-duration-label>{{ service.duration_minutes }}</b> мин. · <b data-service-price-label>{{ service.price|floatformat:0 }} ₽</b>{% endif %}</small></span></label>{% if service.calculation_type == 'unit' %}<div class="service-quantity{% if service_id not in selected_service_ids %} is-hidden{% endif %}" data-service-quantity><span>Количество</span><div class="service-quantity-control"><button type="button" data-quantity-minus aria-label="Уменьшить количество">−</button><input type="number" name="service_quantity_{{ service.id }}" value="{{ row.quantity }}" min="1" step="1" inputmode="numeric" aria-label="Количество услуги {{ service.name }}"><button type="button" data-quantity-plus aria-label="Увеличить количество">+</button></div></div>{% endif %}<div class="service-class-choice{% if service.system_key == 'other' or not row.has_class_choice or service_id not in selected_service_ids %} is-hidden{% endif %}"><span>Класс</span>{{ row.class_field }}</div></div>{% endwith %}{% endfor %}
+          </div>
+          <div class="form-grid other-service-fields" data-other-service-fields hidden>
+            <div class="field">{{ form.other_price.label_tag }}{{ form.other_price }}{% for error in form.other_price.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+            <div class="field">{{ form.other_duration_minutes.label_tag }}{{ form.other_duration_minutes }}{% for error in form.other_duration_minutes.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+          </div>
+          <div class="service-total"><span>Выбрано: <strong data-selected-count>0</strong></span><span>Длительность: <strong data-selected-duration>0 мин.</strong></span></div>
+        </div>
+        {% for error in form.services.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+      </div>
+    </section>
+    <section class="appointment-create-column appointment-client-column client-autocomplete" data-client-autocomplete>
+      <div class="modal-section-title"><div><h3>Клиент и автомобиль</h3><p>Обязательны только имя и телефон</p></div><button class="text-action" type="button" data-client-clear>Очистить</button></div>
+      <div class="form-grid">
+        <div class="field">{{ form.client_first_name.label_tag }}{{ form.client_first_name }}{% for error in form.client_first_name.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+        <div class="field">{{ form.client_last_name.label_tag }}{{ form.client_last_name }}{% for error in form.client_last_name.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+        <div class="field">{{ form.client_phone.label_tag }}{{ form.client_phone }}{% for error in form.client_phone.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+        <div class="field">{{ form.car_plate.label_tag }}{{ form.car_plate }}{% for error in form.car_plate.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+        <div class="field vehicle-field">{{ form.car_description.label_tag }}{{ form.car_description }}{% for error in form.car_description.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+        <div class="field vehicle-field">{{ form.car_vehicle_class.label_tag }}{{ form.car_vehicle_class }}{% for error in form.car_vehicle_class.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+      </div>
+      <div class="client-suggestions" data-client-suggestions hidden></div>
+      <p class="help-text">Выберите найденного клиента или заполните поля для создания нового.</p>
+      <div class="appointment-price-box"><span>Стоимость записи</span><strong data-selected-price>0 ₽</strong><small data-price-breakdown hidden></small></div>
+      <div class="form-grid"><div class="field">{{ form.discount_kind.label_tag }}{{ form.discount_kind }}{% for error in form.discount_kind.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div><div class="field">{{ form.discount_value.label_tag }}{{ form.discount_value }}{% for error in form.discount_value.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div></div>
+      <div class="field" data-discount-reason>{{ form.discount_reason.label_tag }}{{ form.discount_reason }}{% for error in form.discount_reason.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+      <div class="field" data-free-reason>{{ form.free_service_reason.label_tag }}{{ form.free_service_reason }}{% for error in form.free_service_reason.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+      {% include "operations/_assignee_picker.html" %}
+      <div class="field appointment-comment-field">{{ form.comment.label_tag }}{{ form.comment }}{% for error in form.comment.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+    </section>
+  </div>
+  <div class="modal-actions"><button class="button primary" type="submit">Создать запись</button>{% if request.GET.modal == '1' %}<button class="button ghost" type="button" data-modal-close>Отмена</button>{% else %}<a class="button ghost" href="{% url 'appointment-calendar' %}">Отмена</a>{% endif %}</div>
+</form>
+{{ client_suggestions|json_script:"client-suggestion-data" }}
+{{ service_price_data|json_script:"appointment-service-price-data" }}
+{{ service_duration_data|json_script:"appointment-service-duration-data" }}

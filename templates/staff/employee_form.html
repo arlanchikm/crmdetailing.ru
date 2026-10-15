@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — {{ current_tenant.name }}{% endblock %}
+{% block body_class %}employee-editor-body{% endblock %}
+{% block crm_content %}
+{% if employee_limit_reached %}<div class="subscription-upgrade"><span>Лимит сотрудников исчерпан: в вашем тарифе доступно {{ employee_limit }} активных сотрудников.</span>{% if current_membership.role == "owner" %}<a class="button secondary small" href="{% url "subscription-settings" %}">Повысить лимит</a>{% endif %}</div>{% endif %}
+<div class="page-heading employee-editor-heading"><div><h1>{{ title }}</h1><p>Настройте роль, доступные услуги и схему оплаты сотрудника</p></div>{% if current_membership.role == 'owner' %}<a class="button" href="{% url 'role-create' %}">+ Создать новую роль</a>{% endif %}</div>
+<form class="form-card wide-form employee-editor" method="post" data-employee-form>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="form-grid">
+    {% for field in form %}{% if field.name == 'name' or field.name == 'company_role' or field.name == 'crm_access' or field.name == 'salary_mode' %}<div class="field">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endif %}{% endfor %}
+  </div>
+  {% if form.can_create_login %}<div class="form-grid employee-login-fields" data-crm-credentials>
+    {% for field in form %}{% if field.name == 'access_email' or field.name == 'temporary_password' %}<div class="field">{{ field.label_tag }}{{ field }}{% if field.help_text %}<small class="help-text">{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endif %}{% endfor %}
+  </div>{% endif %}
+  {% if advanced_payroll %}<section class="salary-settings" data-salary-section="fixed_plus_percent">
+    <div class="field">{{ form.fixed_monthly_salary.label_tag }}{{ form.fixed_monthly_salary }}{% for error in form.fixed_monthly_salary.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+    <div class="field">{{ form.salary_percent.label_tag }}{{ form.salary_percent }}{% for error in form.salary_percent.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+    <p class="help-text">Фиксированная часть рассчитывается пропорционально выбранному периоду. Процент начисляется только за оплаченные и завершённые работы, с суммы до скидки.</p>
+  </section>
+  <section class="salary-settings" data-salary-section="fixed_plus_appointment_percent">
+    <div class="field">{{ form.fixed_monthly_salary.label_tag }}{{ form.fixed_monthly_salary }}{% for error in form.fixed_monthly_salary.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+    <div class="field"><label for="{{ form.salary_percent.id_for_label }}">Процент от записей</label>{{ form.salary_percent }}{% for error in form.salary_percent.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+    <p class="help-text">Процент начисляется с суммы записи до скидки. Для записи, созданной администратором, начисляется полный процент; внешние записи делятся между администраторами в смене.</p>
+  </section>
+  <section class="salary-settings" data-salary-section="fixed_monthly">
+    <div class="field">{{ form.fixed_monthly_salary.label_tag }}{{ form.fixed_monthly_salary }}{% for error in form.fixed_monthly_salary.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+  </section>{% else %}<section class="tariff-inline-lock"><span>🔒</span><div><strong>Расширенные схемы зарплаты доступны на тарифе «Бизнес»</strong><p>На текущем тарифе используется общий процент из карточки услуги.</p></div><a class="button secondary" href="{% url 'subscription-settings' %}">Тарифы</a></section>{% endif %}
+  <section class="salary-settings">
+    <div class="section-heading compact-heading"><div><h2>Услуги и проценты</h2><p>Отметьте работы, которые может выполнять сотрудник. Значение берётся из карточки услуги, его можно изменить для этого сотрудника.</p></div></div>
+    <div class="employee-service-list">
+      {% for row in form.service_rows %}<label class="employee-service-row">
+        <input type="checkbox" name="available_services" value="{{ row.service.id }}" {% if row.selected %}checked{% endif %} data-employee-service>
+        <span><strong>{{ row.service.name }}</strong><small>Общий процент: {{ row.default_percent|floatformat:"-2" }}%</small></span>
+        {% if advanced_payroll %}<span class="service-rate-field" data-service-rate-field>{{ row.field }}<small>% сотруднику</small>{% for error in row.field.errors %}<b class="field-error">{{ error }}</b>{% endfor %}</span>{% endif %}
+      </label>{% empty %}<p class="empty">Сначала добавьте услуги компании.</p>{% endfor %}
+    </div>
+    {% for error in form.available_services.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+  </section>
+  <div class="field checkbox-field">{{ form.active }}{{ form.active.label_tag }}{% for error in form.active.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+  <div class="form-actions"><button class="button primary" type="submit">Сохранить</button><a class="button ghost" href="{% url 'employee-list' %}">Отмена</a></div>
+</form>
+<script>
+(() => {
+  const form = document.querySelector('[data-employee-form]'); if (!form) return;
+  const mode = form.querySelector('#id_salary_mode');
+  const update = () => { document.querySelectorAll('[data-salary-section]').forEach(section => section.hidden = section.dataset.salarySection !== mode.value); form.querySelectorAll('[data-service-rate-field]').forEach(field => field.hidden = !['service_percent','fixed_plus_appointment_percent'].includes(mode.value)); };
+  mode.addEventListener('change', update); update();
+  const access = form.querySelector('#id_crm_access');
+  const credentials = form.querySelector('[data-crm-credentials]');
+  if (access && credentials) {
+    const updateAccess = () => { credentials.hidden = access.value !== 'enabled'; };
+    access.addEventListener('change', updateAccess); updateAccess();
+  }
+  form.querySelectorAll('[data-employee-service]').forEach(check => {
+    const rate = check.closest('.employee-service-row').querySelector('input[type="number"]');
+    if (!rate) return;
+    const sync = () => rate.disabled = !check.checked;
+    check.addEventListener('change', sync); sync();
+  });
+})();
+</script>
+{% endblock %}

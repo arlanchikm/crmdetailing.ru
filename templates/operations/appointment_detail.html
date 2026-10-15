@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Запись {{ appointment.start_at|date:'d.m H:i' }} — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><a class="back-link" href="{% url 'appointment-calendar' %}?date={{ appointment.start_at|date:'Y-m-d' }}">← Расписание</a><h1>Карточка записи</h1><p>{{ appointment.start_at|date:"d.m.Y H:i" }}–{{ appointment.end_at|date:"H:i" }}</p></div></div>
+<section class="modal-panel standalone-appointment-card">{% include "operations/_appointment_modal_detail.html" %}</section>
+{% endblock %}

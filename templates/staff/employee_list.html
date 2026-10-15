@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Сотрудники — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading">
+  <div><h1>Сотрудники</h1><p>Сотрудники отображаются отдельными столбцами в расписании</p></div>
+  <div class="heading-actions">{% if tenant_permissions.roles_manage %}<a class="button" href="{% url 'role-list' %}">Роли и права</a>{% endif %}{% if tenant_permissions.staff_manage %}<a class="button primary mobile-create-action" href="{% url 'employee-create' %}" aria-label="Добавить сотрудника">+ Добавить сотрудника</a>{% endif %}</div>
+</div>
+<div class="table-card">
+  <table>
+    <thead><tr><th>Сотрудник</th><th>Должность</th><th>Статус</th><th></th></tr></thead>
+    <tbody>
+      {% for employee in employees %}
+      <tr>
+        <td><a class="table-link" href="{% url 'employee-detail' employee.id %}"><strong>{{ employee.name }}</strong></a></td>
+        <td>{{ employee.display_position }}</td>
+        <td><span class="status-pill{% if not employee.active %} inactive{% endif %}">{% if employee.active %}Активен{% else %}Отключен{% endif %}</span></td>
+        <td class="actions">{% if tenant_permissions.staff_manage %}<a href="{% url 'employee-edit' employee.id %}">Изменить</a>{% endif %}</td>
+      </tr>
+      {% empty %}<tr><td class="empty" colspan="4">Добавьте первого сотрудника, чтобы начать вести расписание.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

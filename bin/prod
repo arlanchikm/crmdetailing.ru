@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+PROJECT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$PROJECT_DIR"
+ENV_FILE=${PRODUCTION_ENV_FILE:-"$PROJECT_DIR/.env.production"}
+
+if [ ! -f "$ENV_FILE" ]; then
+  echo "$ENV_FILE не найден. Скопируйте .env.production.example и заполните значения." >&2
+  exit 1
+fi
+
+exec docker compose --env-file "$ENV_FILE" -f compose.prod.yaml "$@"

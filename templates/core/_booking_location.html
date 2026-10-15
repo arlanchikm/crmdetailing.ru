@@ -1,0 +1,11 @@
+{% if booking_location %}
+<div class="booking-company-location">
+  <a class="public-booking-company" href="{{ booking_location.map_url }}" data-booking-map-open aria-haspopup="dialog">{{ tenant.name }}</a>
+  <a class="booking-company-address" href="{{ booking_location.map_url }}" data-booking-map-open aria-haspopup="dialog">{{ tenant.address }}</a>
+</div>
+<dialog class="booking-map-dialog" id="booking-map-dialog" aria-labelledby="booking-map-title">
+  <div class="booking-map-heading"><div><h2 id="booking-map-title">{{ tenant.name }}</h2><p>{{ tenant.address }}</p></div><button type="button" class="booking-map-close" aria-label="{% if tenant.language_code == 'en' %}Close{% else %}Закрыть{% endif %}" data-booking-map-close>×</button></div>
+  <iframe class="booking-map-frame" data-src="{{ booking_location.embed_url }}" title="{% if tenant.language_code == 'en' %}Company on Yandex Maps{% else %}Компания на Яндекс Картах{% endif %}" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  <a class="button primary booking-route-button" href="{{ booking_location.yandex_url }}" data-yandex-app="{{ booking_location.yandex_app_url }}" data-apple-app="{{ booking_location.apple_app_url }}" data-google="{{ booking_location.google_url }}" data-android="{{ booking_location.android_url }}">{% if tenant.language_code == 'en' %}Directions{% else %}Маршрут{% endif %}</a>
+</dialog>
+{% else %}<strong class="public-booking-company">{{ tenant.name }}</strong>{% endif %}

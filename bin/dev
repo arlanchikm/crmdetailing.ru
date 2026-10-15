@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+if command -v docker >/dev/null 2>&1; then
+  DOCKER_BIN="$(command -v docker)"
+elif [ -x /Applications/Docker.app/Contents/Resources/bin/docker ]; then
+  DOCKER_BIN=/Applications/Docker.app/Contents/Resources/bin/docker
+  PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
+  export PATH
+else
+  echo "Docker CLI не найден. Запустите Docker Desktop и повторите команду." >&2
+  exit 1
+fi
+
+exec "$DOCKER_BIN" compose "$@"
+

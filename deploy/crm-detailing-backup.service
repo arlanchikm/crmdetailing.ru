@@ -1,0 +1,10 @@
+[Unit]
+Description=Encrypted offsite backup of CRM Detailing
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/crm-detailing
+ExecStart=/opt/crm-detailing/bin/backup-offsite

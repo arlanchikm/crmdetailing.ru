@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ current_tenant.name }} — CRM{% endblock %}
+{% block crm_content %}
+<div class="page-heading">
+  <div><h1>Обзор</h1><p>Рабочее пространство {{ current_tenant.name }}</p></div>
+</div>
+<div class="module-grid">
+  <a href="{% url 'client-list' %}"><strong>Клиенты</strong><span>Клиентская база и автомобили</span></a>
+  <a href="{% url 'service-list' %}"><strong>Услуги</strong><span>Прайс и нормативы времени</span></a>
+  <a href="{% url 'post-list' %}"><strong>Рабочие посты</strong><span>Места выполнения работ</span></a>
+  <a href="{% url 'appointment-calendar' %}"><strong>Записи</strong><span>Расписание сотрудников и история работ</span></a>
+</div>
+{% endblock %}

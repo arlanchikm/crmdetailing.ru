@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Оформление формы записи — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><a class="back-link" href="{% url 'integration-settings' %}">← Интеграции</a><h1>Настроить форму</h1><p>Предпросмотр показывает изменения сразу. Сохраните настройки, чтобы применить их к ссылке и форме на сайте.</p></div></div>
+<section class="booking-editor-preview"><iframe id="booking-appearance-preview" src="{% url 'booking-appearance-preview' %}" title="Предпросмотр формы записи"></iframe></section>
+<form class="booking-editor-toolbar" method="post" enctype="multipart/form-data" id="booking-appearance-editor">{% csrf_token %}
+  {{ appearance_form.non_field_errors }}
+  <div class="booking-editor-options">{% for field in appearance_form %}{% if field.name != 'remove_background' %}<div class="field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endif %}{% endfor %}</div>
+  <div class="booking-editor-bottom"><span class="help-text">JPG, PNG или WebP до 10 МБ. Рекомендуем 1920 × 1080 px (16:9) или 2560 × 1440 px. Фон заполняет экран (cover); на телефоне края обрезаются — важные детали размещайте ближе к центру.</span><label class="check-field">{{ appearance_form.remove_background }}<span>{{ appearance_form.remove_background.label }}</span></label><div class="form-actions"><button class="button secondary small" name="action" value="reset" formnovalidate>Сбросить</button><button class="button primary small" name="action" value="save">Сохранить</button></div></div>
+</form>
+{{ booking_appearance|json_script:'booking-appearance-config' }}
+<script src="{% static 'js/booking-appearance.js' %}?v=20260918-1"></script>
+{% endblock %}

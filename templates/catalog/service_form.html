@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — {{ current_tenant.name }}{% endblock %}
+{% block body_class %}service-editor-body{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><a class="back-link" href="{% url 'service-list' %}">← Услуги</a><h1>{{ title }}</h1><p>Нормативы химии задаются в миллилитрах, штучных расходников — в штуках</p></div></div>
+<form class="form-card wide-form service-editor" method="post" data-service-editor>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+  {{ form.price }}
+  <div class="form-grid">{% for field in form %}{% if field.name == 'name' or field.name == 'category' or field.name == 'duration_minutes' or field.name == 'employee_percent' or field.name == 'calculation_type' or field.name == 'active' %}<div class="field{% if field.field.widget.input_type == 'checkbox' %} checkbox-field{% endif %}">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endif %}{% endfor %}</div>
+  <section class="form-section vehicle-price-section">
+    <div class="modal-section-title vehicle-price-heading"><div><h2>Цены по классам автомобиля</h2><p>В записи цена подставится по классу автомобиля; её можно переопределить для отдельной услуги</p></div><a class="button" href="{% url 'vehicle-class-list' %}">Настроить классы</a></div>
+    <div class="vehicle-price-grid">{% for row in form.vehicle_class_rows %}<div><div class="field">{{ row.field.label_tag }}{{ row.field }}{% for error in row.field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div><div class="field">{{ row.duration_field.label_tag }}{{ row.duration_field }}{% for error in row.duration_field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div></div>{% empty %}<p class="empty">Добавьте хотя бы один класс автомобиля.</p>{% endfor %}</div>
+    <p class="help-text">Пустое время использует общий норматив. Время класса полностью заменяет общий норматив.</p>
+  </section>
+  {% if norms_enabled %}{% for group in norm_groups %}{% with formset=group.formset %}<section class="form-section service-norm-section" data-norm-group>
+    <div class="modal-section-title"><div><h2>Расходники — {{ group.title }}</h2><p>{% if group.vehicle_class %}Список полностью заменяет общий норматив. Если список пуст, используется общий норматив.{% else %}Списание произойдёт после завершения записи{% endif %}</p></div><button class="button" type="button" data-add-norm>+ Добавить</button></div>
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}<div class="form-error">{{ formset.non_form_errors }}</div>{% endif %}
+    <div class="norm-list" data-norm-list>
+      {% for norm_form in formset %}
+      <div class="norm-row" data-norm-row>
+        {{ norm_form.id }}
+        <div class="field">{{ norm_form.consumable.label_tag }}{{ norm_form.consumable }}{% for error in norm_form.consumable.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+        <div class="field"><label data-quantity-label for="{{ norm_form.quantity.id_for_label }}">Норматив</label>{{ norm_form.quantity }}{% for error in norm_form.quantity.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+        <div class="norm-cost"><span>Себестоимость</span><strong data-row-cost>0 ₽</strong></div>
+        <button class="icon-remove" type="button" data-remove-norm aria-label="Удалить">×</button>
+        <span hidden>{{ norm_form.DELETE }}</span>
+      </div>
+      {% empty %}<div class="norm-empty" data-norm-empty>Расходники пока не добавлены.</div>{% endfor %}
+    </div>
+    <div class="service-cost-summary"><span>Нормативная себестоимость услуги</span><strong data-total-cost>0 ₽</strong></div>
+    <template data-empty-norm-row><div class="norm-row" data-norm-row>{{ formset.empty_form.id }}<div class="field">{{ formset.empty_form.consumable.label_tag }}{{ formset.empty_form.consumable }}</div><div class="field"><label data-quantity-label for="{{ formset.empty_form.quantity.id_for_label }}">Норматив</label>{{ formset.empty_form.quantity }}</div><div class="norm-cost"><span>Себестоимость</span><strong data-row-cost>0 ₽</strong></div><button class="icon-remove" type="button" data-remove-norm aria-label="Удалить">×</button><span hidden>{{ formset.empty_form.DELETE }}</span></div></template>
+  </section>{% endwith %}{% endfor %}{% else %}<section class="tariff-inline-lock"><span>🔒</span><div><strong>Нормативы и автоматическое списание доступны на тарифе «Бизнес»</strong><p>Остатки и ручные складские операции доступны на текущем тарифе.</p></div><a class="button secondary" href="{% url 'subscription-settings' %}">Тарифы</a></section>{% endif %}
+  <div class="form-actions"><button class="button primary" type="submit">Сохранить</button><a class="button ghost" href="{% url 'service-list' %}">Отмена</a></div>
+</form>
+{% if norms_enabled %}<template id="empty-norm-row"><div class="norm-row" data-norm-row>{{ formset.empty_form.id }}<div class="field">{{ formset.empty_form.consumable.label_tag }}{{ formset.empty_form.consumable }}</div><div class="field"><label data-quantity-label for="{{ formset.empty_form.quantity.id_for_label }}">Норматив</label>{{ formset.empty_form.quantity }}</div><div class="norm-cost"><span>Себестоимость</span><strong data-row-cost>0 ₽</strong></div><button class="icon-remove" type="button" data-remove-norm aria-label="Удалить">×</button><span hidden>{{ formset.empty_form.DELETE }}</span></div></template>
+{{ consumable_data|json_script:"service-consumable-data" }}
+<script>
+(() => {
+  const editor = document.querySelector('[data-service-editor]');
+  const data = JSON.parse(document.getElementById('service-consumable-data').textContent);
+  const money = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 2});
+  editor.querySelectorAll('[data-norm-group]').forEach(group => {
+  const list = group.querySelector('[data-norm-list]');
+  const totalForms = group.querySelector('input[name$="-TOTAL_FORMS"]');
+  function update() {
+    let total = 0;
+    list.querySelectorAll('[data-norm-row]').forEach((row) => {
+      const select = row.querySelector('select[name$="-consumable"]');
+      const quantity = row.querySelector('input[name$="-quantity"]');
+      const deleted = row.querySelector('input[name$="-DELETE"]')?.checked;
+      const item = data[select.value];
+      const isLiquid = item?.unit === 'liter' || item?.unit === 'milliliter';
+      row.querySelector('[data-quantity-label]').textContent = `Норматив (${isLiquid ? 'мл' : 'шт.'})`;
+      const chargeQuantity = isLiquid ? Number(quantity.value || 0) / 1000 : Number(quantity.value || 0);
+      const cost = deleted ? 0 : chargeQuantity * Number(item?.cost || 0);
+      row.querySelector('[data-row-cost]').textContent = `${money.format(cost)} ₽`;
+      total += cost;
+    });
+    group.querySelector('[data-total-cost]').textContent = `${money.format(total)} ₽`;
+    const empty = list.querySelector('[data-norm-empty]');
+    if (empty) empty.hidden = list.querySelectorAll('[data-norm-row]:not([hidden])').length > 0;
+  }
+  function bind(row) {
+    row.querySelector('select[name$="-consumable"]').addEventListener('change', update);
+    row.querySelector('input[name$="-quantity"]').addEventListener('input', update);
+    row.querySelector('[data-remove-norm]').addEventListener('click', () => {
+      const deletion = row.querySelector('input[name$="-DELETE"]');
+      if (deletion) deletion.checked = true;
+      row.hidden = true;
+      update();
+    });
+  }
+  list.querySelectorAll('[data-norm-row]').forEach(bind);
+  group.querySelector('[data-add-norm]').addEventListener('click', () => {
+    const index = Number(totalForms.value);
+    const html = group.querySelector('[data-empty-norm-row]').innerHTML.replaceAll('__prefix__', index);
+    list.insertAdjacentHTML('beforeend', html);
+    totalForms.value = index + 1;
+    const row = list.lastElementChild;
+    bind(row);
+    window.enhanceSelects?.(row);
+    update();
+  });
+  update();
+  });
+})();
+</script>{% endif %}
+{% endblock %}

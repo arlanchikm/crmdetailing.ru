@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Настройки компании — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><h1>Настройки</h1><p>Данные и рабочее время компании</p></div></div>
+<nav class="settings-tabs" aria-label="Разделы настроек"><a href="{% url 'profile-settings' %}">Настройки пользователя</a><a class="active" href="{% url 'company-settings' %}">Настройки компании</a><a href="{% url 'interface-settings' %}">Интерфейс</a></nav>
+<form class="form-card wide-form settings-card company-settings-form" method="post" enctype="multipart/form-data">
+  {% csrf_token %}<input type="hidden" name="section" value="company">
+  <div class="section-heading compact-heading"><div><h2>Название и логотип</h2><p>Логотип отображается в верхней части бокового меню</p></div></div>
+  <div class="company-brand-editor">
+    <div class="company-logo-preview">{% if current_tenant.logo %}<img src="{{ current_tenant.logo.url }}" alt="Логотип {{ current_tenant.name }}">{% else %}<span>CRM Detailing</span>{% endif %}<strong>{{ current_tenant.name }}</strong></div>
+    <div><div class="field">{{ company_form.name.label_tag }}{{ company_form.name }}{% for error in company_form.name.errors %}<small class="error-text">{{ error }}</small>{% endfor %}</div><div class="field">{{ company_form.logo.label_tag }}{{ company_form.logo }}<small class="help-text">Любое изображение автоматически кадрируется по центру до формата 3:1. Рекомендуемый размер 1200 × 400 px. JPG, PNG или WebP, до 5 МБ.</small>{% for error in company_form.logo.errors %}<small class="error-text">{{ error }}</small>{% endfor %}</div>{% if current_tenant.logo %}<label class="check-field">{{ company_form.remove_logo }}<span>{{ company_form.remove_logo.label }}</span></label>{% endif %}</div>
+  </div>
+  <div class="field">{{ company_form.address.label_tag }}{{ company_form.address }}{{ company_form.address.errors }}<small class="help-text">Город, улица и дом. Адрес отображается под названием компании в форме онлайн-записи.</small></div>
+  <details class="booking-coordinate-settings"{% if company_form.latitude.errors or company_form.longitude.errors %} open{% endif %}><summary>Точная точка на карте</summary><p class="help-text">Необязательно. Координаты входа помогают построить точный маршрут, в том числе в Яндекс Навигаторе. Их можно скопировать в Яндекс Картах, нажав на нужную точку.</p><div class="public-booking-grid"><div class="field">{{ company_form.latitude.label_tag }}{{ company_form.latitude }}{{ company_form.latitude.errors }}</div><div class="field">{{ company_form.longitude.label_tag }}{{ company_form.longitude }}{{ company_form.longitude.errors }}</div></div></details>
+  <div class="form-actions"><button class="button primary" type="submit">Сохранить данные компании</button></div>
+</form>
+<form class="form-card wide-form working-hours-form settings-card" method="post">
+  {% csrf_token %}<input type="hidden" name="section" value="working-hours">
+  <div class="section-heading compact-heading"><div><h2>Часы работы автомойки</h2><p>По этим границам строится временная шкала в записях, рабочих постах и графике</p></div></div>
+  <div class="working-hours-list">{% for row in working_hours %}<div class="working-hours-row"><strong>{{ row.get_weekday_display }}</strong><label><span>Открытие</span><input type="time" name="opens_{{ row.weekday }}" value="{{ row.opens_at|time:'H:i' }}" step="900"></label><label><span>Закрытие</span><input type="time" name="closes_{{ row.weekday }}" value="{{ row.closes_at|time:'H:i' }}" step="900"></label><label class="closed-day"><input type="checkbox" name="closed_{{ row.weekday }}" value="1" {% if row.is_closed %}checked{% endif %}><span>Выходной</span></label></div>{% endfor %}</div>
+  <div class="form-actions"><button class="button primary" type="submit">Сохранить часы работы</button></div>
+</form>
+<section class="form-card settings-card" id="work-posts"><div class="section-heading compact-heading"><div><h2>Рабочие посты</h2><p>Посты доступны в календаре записей. Отключение сохраняет историю.</p></div><a class="button primary small" href="{% url 'post-create' %}">Добавить пост</a></div><div class="simple-list">{% for post in work_posts %}<div><span><strong>{{ post.name }}</strong><small>{{ post.get_kind_display }} · {% if post.active %}Активен{% else %}Отключён{% endif %}</small></span><a class="button secondary small" href="{% url 'post-edit' post.id %}">Изменить</a></div>{% empty %}<p class="muted">Постов пока нет. Записи без назначения видны в столбце «Без поста».</p>{% endfor %}</div></section>{% endblock %}

@@ -1,0 +1,44 @@
+<div class="modal-head"{% if appointment_created %} data-appointment-created{% endif %}>
+  <div><span class="eyebrow">Запись {{ appointment.start_at|date:"d.m.Y H:i" }}</span><h2>{{ appointment.client_display_name }}</h2><p>{{ appointment.car_display }}</p></div>
+  <button class="modal-close" type="button" data-modal-close aria-label="Закрыть">×</button>
+</div>
+{% if messages and not transition_error %}<div class="modal-messages">{% for message in messages %}<div class="message {{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+{% if transition_error %}<div class="form-error">{{ transition_error }}</div>{% endif %}
+{% if appointment.source == "website" %}<p class="muted">Запись через форму на сайте</p>{% endif %}
+<div class="modal-status-line"><span class="status-pill status-{{ appointment.status }}">{{ appointment.get_status_display }}</span><span class="status-pill payment-{{ appointment.payment_status }}">{{ appointment.get_payment_status_display }}</span></div>
+<div class="modal-detail-grid">
+  <div><span>Время</span><strong>{{ appointment.start_at|date:"H:i" }}–{{ appointment.end_at|date:"H:i" }}</strong></div>
+  <div><span>Сотрудник</span><strong>{{ appointment.employee.name|default:"Не назначен" }}</strong></div>
+  <div><span>Рабочий пост</span><strong>{% if appointment.post %}{{ appointment.post.name }}{% else %}Не выбран{% endif %}</strong></div>
+  <div><span>Стоимость</span><strong>{{ appointment.total|floatformat:2 }} ₽</strong>{% if appointment.discount_amount %}<small>До скидки {{ appointment.subtotal|floatformat:2 }} ₽</small>{% endif %}</div>
+</div>
+{% if appointment.assignees.all %}<section class="modal-section"><h3>Исполнители</h3><ul class="item-list compact-items">{% for row in appointment.assignees.all %}<li><span>{{ row.employee.name }}{% if row.is_primary %} · основной{% endif %}</span><strong>{{ row.salary_share_percent|floatformat:"-2" }}%</strong></li>{% endfor %}</ul></section>{% endif %}
+<section class="modal-section">
+  <div class="modal-section-title"><h3>Услуги</h3>{% if tenant_permissions.appointments_manage and appointment.status != 'completed' %}<a class="text-action js-modal-load" href="{% url 'appointment-edit' appointment.id %}{% if request.GET.modal %}?modal=1&amp;focus=services{% else %}#services{% endif %}">+ Добавить услугу</a>{% endif %}</div>
+  <ul class="item-list compact-items">
+    {% for item in appointment.items.all %}<li><span>{{ item.display_name }} <small>{{ item.duration_minutes_snapshot }} мин.{% if item.vehicle_class_name_snapshot %} · {{ item.vehicle_class_name_snapshot }}{% endif %}</small></span><strong>{{ item.price_snapshot|floatformat:0 }} ₽</strong></li>{% endfor %}
+  </ul>
+</section>
+{% if appointment.comment %}<section class="modal-section"><h3>Комментарий</h3><p>{{ appointment.comment }}</p></section>{% endif %}
+{% if appointment.free_service_reason %}<section class="modal-section"><h3>Причина бесплатной работы</h3><p>{{ appointment.free_service_reason }}</p></section>{% endif %}
+{% if appointment.discount_amount %}<section class="modal-section"><div class="modal-section-title"><div><h3>Скидка</h3><p>{{ appointment.discount_amount|floatformat:2 }} ₽</p></div></div><p>{{ appointment.discount_reason }}</p></section>{% endif %}
+<section class="modal-section"><h3>Затраты записи</h3><div class="modal-detail-grid"><div><span>Нормативные расходники</span><strong>{{ appointment_consumables_cost|floatformat:2 }} ₽</strong></div><div><span>Начисленная зарплата</span><strong>{{ appointment_salary_cost|floatformat:2 }} ₽</strong></div><div><span>Скидка</span><strong>{{ appointment.discount_amount|floatformat:2 }} ₽</strong></div><div><span>Комиссия оплаты</span><strong>{{ appointment.payment_fee|floatformat:2 }} ₽</strong></div></div></section>
+<section class="modal-section"><div class="modal-section-title"><div><h3>Оплата</h3><p>Оплачено {{ appointment.amount_paid|floatformat:2 }} из {{ appointment.total|floatformat:2 }} ₽ · комиссия {{ appointment.payment_fee|floatformat:2 }} ₽</p></div></div>
+  {% if appointment.payments.all %}<ul class="item-list compact-items payment-list">{% for row in appointment.payments.all %}<li><span>{{ row.created_at|date:"d.m H:i" }} · {{ row.get_kind_display }} · {{ row.get_method_display }}</span><strong>{% if row.kind == 'refund' %}−{% else %}+{% endif %}{{ row.amount|floatformat:2 }} ₽</strong>{% if tenant_permissions.appointments_manage %}<form class="js-modal-form" method="post" action="{% url 'appointment-delete-payment' appointment.id row.id %}{% if request.GET.modal %}?modal=1{% endif %}" onsubmit="return confirm('Удалить эту операцию оплаты?')">{% csrf_token %}<button class="icon-action danger-text" type="submit" aria-label="Удалить оплату" title="Удалить оплату">×</button></form>{% endif %}</li>{% endfor %}</ul>{% endif %}
+  {% if tenant_permissions.appointments_manage %}<form class="inline-payment-form js-modal-form" method="post" action="{% url 'appointment-add-payment' appointment.id %}{% if request.GET.modal %}?modal=1{% endif %}">{% csrf_token %}{% for field in payment_form %}<div class="field">{{ field.label_tag }}{{ field }}</div>{% endfor %}<button class="button primary">Сохранить оплату</button></form>{% endif %}
+</section>
+{% if appointment.status == 'completed' and tenant_permissions.quality_manage %}<section class="modal-section"><div class="modal-section-title"><div><h3>Оценка клиента</h3><p>{% if appointment_rating and appointment_rating.submitted_by_client %}{{ appointment_rating.score }} из 5{% else %}Оценка клиентом не поставлена{% endif %}</p></div><a class="text-action" href="{% url 'complaint-create' %}?appointment={{ appointment.id }}">+ Претензия</a></div><div class="copy-link-row"><input value="{{ feedback_url }}" readonly aria-label="Ссылка для оценки"><button class="button ghost" type="button" data-copy-feedback>Копировать</button></div>{% if appointment_rating and appointment_rating.submitted_by_client and appointment_rating.comment %}<p>{{ appointment_rating.comment }}</p>{% endif %}</section>{% endif %}
+{% if appointment.complaints.all %}<section class="modal-section"><h3>Претензии и переделки</h3><ul class="item-list compact-items">{% for row in appointment.complaints.all %}<li><span>{{ row.get_reason_display }} · {{ row.get_status_display }}<small>{{ row.description }}</small></span><strong>{% if row.is_rework %}Переделка{% else %}Претензия{% endif %}</strong></li>{% endfor %}</ul></section>{% endif %}
+<section class="modal-section">
+  <button class="button ghost" type="button" data-history-toggle>История клиента</button>
+  <div data-history-panel hidden>{% include "operations/_visit_history.html" with visits=client_history empty_text="Предыдущих посещений пока нет." %}</div>
+</section>
+{% if tenant_permissions.appointments_manage or tenant_permissions.appointments_status_own %}
+<div class="modal-actions split-actions">
+  {% if tenant_permissions.appointments_manage %}<a class="button js-modal-load" href="{% url 'appointment-edit' appointment.id %}{% if request.GET.modal %}?modal=1{% endif %}">Изменить</a>{% endif %}
+  {% if appointment.status == 'waiting' %}<form class="js-modal-form" method="post" action="{% url 'appointment-transition' appointment.id 'no_show' %}{% if request.GET.modal %}?modal=1{% endif %}">{% csrf_token %}<button class="button ghost">Не пришёл</button></form>{% endif %}
+  {% if appointment.status == 'waiting' or appointment.status == 'no_show' %}<form class="js-modal-form" method="post" action="{% url 'appointment-transition' appointment.id 'start' %}{% if request.GET.modal %}?modal=1{% endif %}">{% csrf_token %}<button class="button primary">Начать работу</button></form>{% endif %}
+  {% if appointment.status == 'in_progress' %}<form class="js-modal-form" method="post" action="{% url 'appointment-transition' appointment.id 'complete' %}{% if request.GET.modal %}?modal=1{% endif %}">{% csrf_token %}<button class="button primary">Завершить</button></form>{% endif %}
+</div>
+{% endif %}
+{% if tenant_permissions.appointments_manage %}<details class="modal-section danger-zone"><summary>Удалить запись</summary>{% if appointment.amount_paid > 0 %}<p class="muted">Сначала оформите полный возврат оплаты.</p>{% else %}<form class="js-modal-form" method="post" action="{% url 'appointment-delete' appointment.id %}{% if request.GET.modal %}?modal=1{% endif %}">{% csrf_token %}<div class="field"><label for="delete-reason-{{ appointment.id }}">Причина удаления</label><textarea id="delete-reason-{{ appointment.id }}" name="reason" rows="3" required placeholder="Обязательно укажите причину"></textarea></div><button class="button danger" type="submit">Удалить запись</button></form>{% endif %}</details>{% endif %}

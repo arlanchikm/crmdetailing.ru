@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Функция тарифа — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<section class="tariff-locked">
+  <div class="tariff-lock-icon" aria-hidden="true">🔒</div>
+  <p class="eyebrow">Доступ по тарифу</p>
+  <h1>{{ locked_feature.name }}</h1>
+  <p>{{ locked_feature.description }}</p>
+  <p class="muted">Функция доступна на тарифе «{% if locked_feature.minimum_plan == 'network' %}Сеть{% else %}Бизнес{% endif %}».</p>
+  {% if current_membership.role == 'owner' %}<a class="button primary" href="{% url 'subscription-settings' %}">Посмотреть тарифы</a>{% endif %}
+</section>
+{% endblock %}

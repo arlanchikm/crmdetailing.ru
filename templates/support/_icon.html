@@ -1,0 +1,10 @@
+<svg viewBox="0 0 24 24">
+{% if icon == 'getting-started' %}<path d="M12 3 3 8v8l9 5 9-5V8l-9-5Z"/><path d="m3 8 9 5 9-5M12 13v8"/>
+{% elif icon == 'appointments' %}<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18m5 5 2 2 5-5"/>
+{% elif icon == 'services' %}<path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z"/><path d="m4 12 8 4.5 8-4.5M4 16.5l8 4.5 8-4.5"/>
+{% elif icon == 'team' %}<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0M14 15a4.5 4.5 0 0 1 7.5 3.4V20"/>
+{% elif icon == 'inventory' %}<path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/>
+{% elif icon == 'finance' %}<path d="M4 19V9M10 19V5M16 19v-7M22 19H2m-17-11 5-4 6 5 5-6"/>
+{% elif icon == 'online-booking' %}<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M7 6h1M11 6h1m-5 9 3 3 7-6"/>
+{% else %}<circle cx="12" cy="12" r="8"/><path d="M12 8v5M12 16h.01"/>{% endif %}
+</svg>

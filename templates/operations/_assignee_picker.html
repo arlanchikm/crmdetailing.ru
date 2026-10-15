@@ -1,0 +1,18 @@
+<div class="field assignee-picker" data-assignee-picker>
+  {{ form.employee }}{{ form.primary_share_percent }}
+  <label>Исполнители</label>
+  <button class="assignee-picker-button" type="button" data-assignee-toggle><span data-assignee-label>Выберите исполнителей</span><b>⌄</b></button>
+  <div class="assignee-picker-panel" data-assignee-panel hidden>
+    {% for row in assignment_rows %}<label class="assignee-check-row" data-capability-mode="{{ row.capability_mode|yesno:'1,0' }}" data-service-ids="{{ row.service_ids }}">
+      <input type="checkbox" name="employees" value="{{ row.employee.id }}" {% if row.selected %}checked{% endif %} data-assignee-check>
+      <span>{{ row.employee.name }}<small>{{ row.employee.display_position }}</small><small class="assignee-capability-warning" hidden>Не выполняет выбранные услуги</small></span><i>✓</i>
+    </label>{% endfor %}
+  </div>
+  {% for error in form.employees.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+  <button class="salary-split-toggle" type="button" data-split-toggle>Изменить распределение</button>
+  <input type="hidden" name="custom_salary_split" value="{% if assignment_rows.0.share %}1{% else %}0{% endif %}" data-custom-split>
+  <div class="salary-split-panel" data-split-panel {% if not assignment_rows.0.share %}hidden{% endif %}>
+    <small class="help-text">Распределите участие исполнителей. В сумме должно быть 100%.</small>
+    {% for row in assignment_rows %}<label class="salary-split-row" data-share-row {% if not row.selected %}hidden{% endif %}><span>{{ row.employee.name }}</span><span><input type="number" name="employee_share_{{ row.employee.id }}" value="{{ row.share }}" min="0" max="100" step="0.01" inputmode="decimal" data-share-input> %</span></label>{% endfor %}
+  </div>
+</div>

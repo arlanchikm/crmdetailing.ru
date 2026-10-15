@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Классы автомобилей — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading">
+  <div><h1>Классы автомобилей</h1><p>Класс определяет цену услуг и автоматически подставляется из карточки автомобиля</p></div>
+  <a class="button primary mobile-create-action" href="{% url 'vehicle-class-create' %}" aria-label="Новый класс автомобиля">+ Новый класс</a>
+</div>
+<div class="table-card"><table>
+  <thead><tr><th>Класс</th><th>Изображение</th><th>Активен</th><th>Автомобилей</th><th></th></tr></thead>
+  <tbody>{% for vehicle_class in vehicle_classes %}<tr>
+    <td><strong>{{ vehicle_class.name }}</strong></td>
+    <td>{% if vehicle_class.image %}<img class="vehicle-class-preview" src="{{ vehicle_class.image.url }}" alt="{{ vehicle_class.name }}" loading="lazy" decoding="async">{% else %}Стандартное{% endif %}</td><td>{{ vehicle_class.active|yesno:"Да,Нет" }}</td><td>{{ vehicle_class.car_count }}</td>
+    <td class="actions"><a href="{% url 'vehicle-class-edit' vehicle_class.id %}">Изменить</a></td>
+  </tr>{% empty %}<tr><td colspan="3" class="empty">Добавьте первый класс автомобиля.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

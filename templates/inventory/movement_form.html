@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% load crm_numbers %}
+{% block title %}Складская операция — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><a class="back-link" href="{% url 'consumable-list' %}">← Расходники</a><h1>{{ consumable.name }}</h1><p>План: {{ consumable.planned_stock|trim_decimal }} {{ consumable.unit_display }} · факт: {{ consumable.actual_stock|trim_decimal }} {{ consumable.unit_display }}</p></div></div>
+<form class="form-card" method="post">{% csrf_token %}{% for field in form %}<div class="field">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endfor %}<p class="help-text">Для поступления и списания укажите объём операции. Для корректировки и инвентаризации — новый фактический остаток.</p><div class="form-actions"><button class="button primary">Сохранить</button><a class="button ghost" href="{% url 'consumable-list' %}">Отмена</a></div></form>
+{% endblock %}

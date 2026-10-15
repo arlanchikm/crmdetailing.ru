@@ -1,0 +1,75 @@
+{% extends "base.html" %}{% load crm_numbers %}
+{% block title %}Услуги — {{ current_tenant.name }}{% endblock %}
+{% block body_class %}service-list-body{% endblock %}
+{% block crm_content %}
+<div class="page-heading">
+  <div><h1>Услуги</h1><p>Прайс, время выполнения и себестоимость</p></div>
+  <div class="heading-actions service-heading-actions">
+    <a class="button primary service-section-link" href="{% url 'vehicle-class-list' %}">Классы автомобилей</a>
+    {% if tenant_permissions.services_manage %}<a class="button service-section-link" href="{% url 'service-category-list' %}">Категории услуг</a><a class="button primary mobile-create-action" href="{% url 'service-create' %}" aria-label="Добавить услугу">+ Добавить услугу</a>{% endif %}
+  </div>
+</div>
+<div class="mobile-reference-search service-search-panel">
+  <label><span aria-hidden="true">⌕</span><input type="search" placeholder="Поиск по услугам…" data-service-search aria-label="Поиск по услугам"></label>
+  <button type="button" aria-label="Показать категории" data-service-filter-toggle>☷</button>
+</div>
+<nav class="service-category-tabs" aria-label="Категории услуг" data-service-categories>
+  <button type="button" class="active" data-service-category="all">Все <b>{{ active_service_count }}</b></button>
+  {% for category in service_categories %}<button type="button" data-service-category="{{ category.id }}">{{ category.name }} <b>{{ category.active_service_count }}</b></button>{% endfor %}
+</nav>
+<div class="table-card service-desktop-table"><table><thead><tr><th>Название</th><th>Цена</th><th>Норматив</th><th>% сотруднику</th><th>Себестоимость</th><th>Статус</th><th></th></tr></thead><tbody>
+{% for service in services %}
+  <tr data-service-row data-service-category="{% if service.category_id %}{{ service.category_id }}{% else %}uncategorized{% endif %}" data-service-name="{{ service.name|lower }} {{ service.category.name|default:''|lower }}">
+    <td><strong>{{ service.name }}</strong><small class="table-subtitle">{{ service.category.name|default:"Без категории" }}</small></td>
+    <td><button class="inline-detail-toggle" type="button" aria-expanded="false" {% if service.vehicle_class_prices.all|length <= 1 %}disabled{% endif %}><span data-service-price-summary>{% if service.min_price == service.max_price %}{{ service.min_price|floatformat:0 }} ₽{% else %}{{ service.min_price|floatformat:0 }}–{{ service.max_price|floatformat:0 }} ₽{% endif %}</span>{% if service.vehicle_class_prices.all|length > 1 %}<svg aria-hidden="true" viewBox="0 0 20 20"><path d="m5 7.5 5 5 5-5"/></svg>{% endif %}</button></td>
+    <td>{{ service.duration_minutes }} мин.</td><td>{{ service.employee_percent|floatformat:2 }}%</td><td>{{ service.cost|floatformat:2 }} ₽</td>
+    <td><span class="status-pill {% if not service.active %}inactive{% endif %}">{% if service.active %}Активна{% else %}Отключена{% endif %}</span></td>
+    <td class="actions">{% if tenant_permissions.services_manage %}<a href="{% url 'service-edit' service.id %}">Изменить</a>{% endif %}</td>
+  </tr>
+  {% if service.vehicle_class_prices.all|length > 1 %}<tr class="service-price-detail" data-service-price-detail hidden><td colspan="7"><form class="service-class-price-list" method="post" action="{% url 'service-class-price-update' service.id service.vehicle_class_prices.all.0.id %}" data-inline-service-prices>{% csrf_token %}{% for price in service.vehicle_class_prices.all %}<div class="service-class-price-row"><span>{{ price.vehicle_class.name }}</span><label><input type="text" inputmode="decimal" name="price_{{ price.id }}" value="{{ price.effective_price|floatformat:'-2' }}" aria-label="Цена {{ service.name }} — {{ price.vehicle_class.name }}"><span>₽</span></label><small data-price-error-for="{{ price.id }}"></small></div>{% endfor %}<div class="service-class-price-actions"><button class="button primary" type="submit">Сохранить</button><small data-price-status aria-live="polite"></small></div></form></td></tr>{% endif %}
+{% empty %}<tr><td colspan="7" class="empty">Добавьте первую услугу.</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="mobile-service-list" data-mobile-service-list>
+  {% for service in services %}<article class="mobile-service-card" data-service-card data-service-category="{% if service.category_id %}{{ service.category_id }}{% else %}uncategorized{% endif %}" data-service-name="{{ service.name|lower }} {{ service.category.name|default:''|lower }}">
+    <header><div><h2>{{ service.name }}</h2><span>{{ service.category.name|default:"Без категории" }}</span></div><a href="{% url 'service-edit' service.id %}" aria-label="Открыть {{ service.name }}">›</a></header>
+    <div class="mobile-service-facts">
+      <div><span>Цена</span><strong>{% if service.min_price == service.max_price %}{{ service.min_price|floatformat:0 }} ₽{% else %}{{ service.min_price|floatformat:0 }}–{{ service.max_price|floatformat:0 }} ₽{% endif %}</strong><span>% сотруднику</span><strong>{{ service.employee_percent|floatformat:0 }}%</strong></div>
+      <div><span>Норматив</span><strong>{{ service.duration_minutes }} мин.</strong><span>Себестоимость</span><strong>{{ service.cost|floatformat:2 }} ₽</strong>{% with norm=service.default_norms|first %}{% if norm %}<small>{{ norm.consumable.name }}: {{ norm.quantity|trim_decimal }} {{ norm.consumable.unit_display }}</small>{% endif %}{% endwith %}</div>
+    </div>
+    <footer><span>Состояние</span>{% if tenant_permissions.services_manage and not service.system_key %}<form method="post" action="{% url 'service-edit' service.id %}" data-service-active>{% csrf_token %}<input type="hidden" name="action" value="toggle_active"><button type="submit" class="service-active-toggle{% if service.active %} is-active{% endif %}" role="switch" aria-checked="{% if service.active %}true{% else %}false{% endif %}"><i></i><b data-active-label>{% if service.active %}Активна{% else %}Отключена{% endif %}</b></button><small class="service-active-error" data-service-active-error aria-live="polite"></small></form>{% else %}<span class="status-pill{% if not service.active %} inactive{% endif %}">{% if service.active %}Активна{% else %}Отключена{% endif %}</span>{% endif %}{% if tenant_permissions.services_manage %}<a class="mobile-card-edit" href="{% url 'service-edit' service.id %}">Изменить</a>{% endif %}</footer>
+  </article>{% empty %}<div class="empty-card">Добавьте первую услугу.</div>{% endfor %}
+</div>
+<script>
+(() => {
+  const money = value => new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 2}).format(Number(value));
+  document.querySelectorAll('.inline-detail-toggle').forEach(button => button.addEventListener('click', () => {
+    const detail = button.closest('tr').nextElementSibling;
+    if (!detail?.matches('[data-service-price-detail]')) return;
+    const willOpen = detail.hidden;
+    document.querySelectorAll('[data-service-price-detail]').forEach(row => { row.hidden = true; });
+    document.querySelectorAll('.inline-detail-toggle').forEach(toggle => toggle.setAttribute('aria-expanded', 'false'));
+    detail.hidden = !willOpen;
+    button.setAttribute('aria-expanded', String(willOpen));
+  }));
+  document.querySelectorAll('[data-inline-service-prices]').forEach(form => form.addEventListener('submit', async event => {
+    event.preventDefault(); const status = form.querySelector('[data-price-status]');
+    form.querySelectorAll('[data-price-error-for]').forEach(node => node.textContent = ''); status.textContent = '';
+    const response = await fetch(form.action, {method:'POST', body:new FormData(form), credentials:'same-origin', headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'}});
+    const data = await response.json();
+    if (!response.ok) { Object.entries(data.errors || {}).forEach(([id, message]) => { const target=form.querySelector(`[data-price-error-for="${id}"]`); if(target) target.textContent=message; }); if (!data.errors) status.textContent = data.error || 'Не удалось сохранить'; return; }
+    status.textContent = 'Сохранено'; const summary = form.closest('[data-service-price-detail]').previousElementSibling.querySelector('[data-service-price-summary]');
+    summary.textContent = Number(data.minimum) === Number(data.maximum) ? `${money(data.minimum)} ₽` : `${money(data.minimum)}–${money(data.maximum)} ₽`; setTimeout(() => status.textContent = '', 1400);
+  }));
+  const cards = [...document.querySelectorAll('[data-service-card]')]; const search = document.querySelector('[data-service-search]'); const tabs = [...document.querySelectorAll('[data-service-category]')]; let category = 'all';
+  const apply = () => { const query = (search?.value || '').trim().toLowerCase(); cards.forEach(card => card.hidden = !((category === 'all' || card.dataset.serviceCategory === category) && card.dataset.serviceName.includes(query))); };
+  search?.addEventListener('input', apply);
+  tabs.forEach(tab => tab.addEventListener('click', () => { category = tab.dataset.serviceCategory; tabs.forEach(item => item.classList.toggle('active', item === tab)); apply(); }));
+  document.querySelector('[data-service-filter-toggle]')?.addEventListener('click', () => document.querySelector('[data-service-categories]')?.classList.toggle('is-open'));
+  document.querySelectorAll('[data-service-active]').forEach(form => form.addEventListener('submit', async event => {
+    event.preventDefault(); const button=form.querySelector('button'); const errorNode=form.querySelector('[data-service-active-error]'); button.disabled=true; errorNode.textContent='';
+    try { const wasActive=button.classList.contains('is-active'); const requestUrl=new URL(form.getAttribute('action'),window.location.href); const response=await fetch(requestUrl.href,{method:'POST',body:new FormData(form),credentials:'same-origin',headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'}}); const contentType=response.headers.get('content-type')||''; const data=contentType.includes('application/json')?await response.json():{}; if(!response.ok) throw new Error(data.error || 'Не удалось изменить состояние услуги'); button.classList.toggle('is-active', data.active); button.setAttribute('aria-checked', String(data.active)); button.querySelector('[data-active-label]').textContent=data.active?'Активна':'Отключена'; if(wasActive!==data.active){const delta=data.active?1:-1;const card=form.closest('[data-service-card]');['all',card.dataset.serviceCategory].forEach(key=>{const count=document.querySelector(`[data-service-category="${key}"] b`);if(count)count.textContent=String(Math.max(0,Number(count.textContent)+delta));});} }
+    catch (error) { errorNode.textContent=error.message || 'Не удалось изменить состояние услуги'; } finally { button.disabled=false; }
+  }));
+})();
+</script>
+{% endblock %}

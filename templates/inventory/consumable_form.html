@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load crm_numbers %}
+{% block title %}{{ title }} — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><a class="back-link" href="{% url 'consumable-list' %}">← Расходники</a><h1>{{ title }}</h1><p>Единица остатка и стоимости определяется выбранной категорией</p></div></div>
+{% if consumable %}<div class="stat-strip stock-summary"><div><span>План</span><strong>{{ consumable.planned_stock|trim_decimal }} {{ consumable.unit_display }}</strong></div><div><span>Факт</span><strong>{{ consumable.actual_stock|trim_decimal }} {{ consumable.unit_display }}</strong></div><div><span>Расхождение</span><strong class="{% if consumable.variance < 0 %}negative-text{% elif consumable.variance > 0 %}positive-text{% endif %}">{{ consumable.variance|trim_decimal }} {{ consumable.unit_display }}</strong></div></div>{% endif %}
+<form class="form-card wide-form" method="post">{% csrf_token %}
+  <div class="form-grid">{% for field in form %}<div class="field{% if field.field.widget.input_type == 'checkbox' %} checkbox-field{% endif %}">{{ field.label_tag }}{{ field }}{% if field.help_text %}<small class="help-text">{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endfor %}</div>
+  <div class="form-actions"><button class="button primary">Сохранить</button><a class="button ghost" href="{% url 'consumable-list' %}">Отмена</a>{% if consumable and tenant_permissions.inventory_manage %}<button class="button danger" type="submit" form="delete-consumable-form">Удалить расходник</button>{% endif %}</div>
+</form>
+{% if consumable and tenant_permissions.inventory_manage %}<form id="delete-consumable-form" method="post" action="{% url 'consumable-delete' consumable.id %}" onsubmit="return confirm('Удалить расходник «{{ consumable.name|escapejs }}»? История списаний сохранится.');">{% csrf_token %}</form>{% endif %}
+<div class="modal-backdrop" id="category-modal" hidden><div class="modal-panel" role="dialog" aria-modal="true" aria-label="Новая категория"></div></div>
+{{ category_units|json_script:"inventory-category-units" }}
+<script>
+(() => {
+  const category = document.getElementById('id_category');
+  const costLabel = document.querySelector('label[for="id_cost_per_unit"]');
+  const factLabel = document.querySelector('label[for="id_actual_stock"]');
+  const units = JSON.parse(document.getElementById('inventory-category-units').textContent);
+  function updateLabels() {
+    const unit = units[category.value];
+    const liquid = unit === 'liter' || unit === 'milliliter';
+    costLabel.textContent = liquid ? 'Стоимость за литр' : 'Стоимость за шт.';
+    factLabel.textContent = unit === 'liter' ? 'Факт (л.)' : (unit === 'milliliter' ? 'Факт (мл)' : 'Факт (шт.)');
+  }
+  category.addEventListener('change', updateLabels);
+  const modal = document.getElementById('category-modal'), panel = modal.querySelector('.modal-panel');
+  category.addEventListener('custom-select:add', async event => { modal.hidden = false; document.body.classList.add('modal-open'); panel.innerHTML = '<div class="modal-loading">Загрузка…</div>'; const response = await fetch(event.detail.url, {headers:{'X-Requested-With':'XMLHttpRequest'}}); panel.innerHTML = await response.text(); window.enhanceSelects?.(panel); });
+  modal.addEventListener('click', event => { if (event.target === modal || event.target.closest('[data-modal-close]')) { modal.hidden = true; document.body.classList.remove('modal-open'); } });
+  modal.addEventListener('submit', async event => { event.preventDefault(); const form = event.target; const response = await fetch(form.action, {method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'}}); if (response.ok) { const item = await response.json(); units[item.id] = item.unit; category.add(new Option(item.name, item.id, true, true)); category.dispatchEvent(new Event('change', {bubbles:true})); modal.hidden = true; document.body.classList.remove('modal-open'); } else { panel.innerHTML = await response.text(); window.enhanceSelects?.(panel); } });
+  updateLabels();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% extends 'platform/base.html' %}
+{% block body %}
+<div class="page-heading"><div><h1>Юридические документы</h1><p>Изменения публикуются на сайте после сохранения. Предыдущие редакции сохраняются.</p></div></div>
+<div class="settings-layout">{% for document in documents %}<section class="form-card"><h2>{{ document.title }}</h2><p>Редакция {{ document.version }}</p><a class="button primary" href="{% url 'platform-legal-edit' document.slug %}">Изменить</a></section>{% endfor %}</div>
+{% endblock %}

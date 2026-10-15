@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ document.title }} — CRM Detailing{% endblock %}
+{% block content %}
+<main class="legal-shell">
+  <a class="legal-back" href="{% url 'landing' %}">← На главную</a>
+  <section class="legal-paper">
+    <header>
+      <p class="legal-document-label">CRM DETAILING · ЮРИДИЧЕСКИЕ ДОКУМЕНТЫ</p>
+      <h1>{{ document.title }}</h1>
+      <p class="legal-meta">Редакция от {{ document_version }}</p>
+    </header>
+    <article class="legal-document">
+      {% if document.content != None %}{{ document.content|safe }}{% else %}{% include document.template %}{% endif %}
+    </article>
+  </section>
+</main>
+{% endblock %}

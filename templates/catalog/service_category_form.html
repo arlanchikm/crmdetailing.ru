@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><a class="back-link" href="{% url 'service-category-list' %}">← Категории услуг</a><h1>{{ title }}</h1><p>При отключении категория сохраняется у услуг, но скрывается из фильтров</p></div></div>
+<form class="form-card" method="post">{% csrf_token %}{{ form.non_field_errors }}{% for field in form %}<div class="field{% if field.field.widget.input_type == 'checkbox' %} checkbox-field{% endif %}">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endfor %}<div class="form-actions"><button class="button primary" type="submit">Сохранить</button><a class="button ghost" href="{% url 'service-category-list' %}">Отмена</a></div></form>
+{% endblock %}

@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block title %}Претензия — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}<section class="form-card wide-form">{% include "operations/_complaint_modal_detail.html" %}</section>{% include "operations/_photo_lightbox.html" %}{% endblock %}

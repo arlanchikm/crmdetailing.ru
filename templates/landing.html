@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}CRM Detailing — система управления детейлинг-студией{% endblock %}
+{% block body_class %}landing-page{% endblock %}
+{% block app_styles %}<link rel="stylesheet" href="{% static 'css/landing-base.css' %}?v=20261007-opt1">{% endblock %}
+{% block app_scripts %}{% endblock %}
+{% block extra_head %}
+<meta name="description" content="CRM Detailing — записи, клиенты, сотрудники, склад и финансы детейлинг-студии в одном рабочем пространстве.">
+<link rel="stylesheet" href="{% static 'css/landing.css' %}?v=20261005-mobile-images1">
+{% endblock %}
+{% block content %}
+<div class="landing">
+  <header class="landing-header"><div class="landing-container landing-header-inner">
+    <a class="landing-brand" href="#top" aria-label="CRM Detailing — к началу страницы"><span class="landing-brand-symbol"><img src="{% static 'img/crm-logo-480-20261007.webp' %}" alt=""></span><span class="landing-brand-name">crmdetailing<span>.ru</span></span></a>
+    <nav class="landing-nav" aria-label="Основное меню"><a href="#product">Возможности</a><a href="#interface">Интерфейс</a><a href="#pricing">Подписка</a><a href="#contacts">Контакты</a><a href="https://{{ support_domain }}">База знаний</a></nav>
+    <div class="landing-header-actions"><a class="landing-login-link" href="#login">Войти</a><a class="landing-button landing-button-small" href="{% url 'company-register' %}">Начать работу</a></div>
+    <details class="landing-mobile-nav"><summary aria-label="Открыть меню"><span></span><span></span><span></span></summary><div><a href="#product">Возможности</a><a href="#interface">Интерфейс</a><a href="#pricing">Подписка</a><a href="#contacts">Контакты</a><a href="https://{{ support_domain }}">База знаний</a><a href="#login">Войти</a><a href="{% url 'company-register' %}">Начать работу</a></div></details>
+  </div></header>
+  <main id="top">
+    <section class="landing-hero landing-container">
+      <div class="landing-hero-copy">
+        <span class="landing-kicker"><span></span> Платформа для детейлинг-бизнеса</span>
+        <h1>Порядок в студии.<br><em>Ясность в цифрах.</em></h1>
+        <p>Записи, клиенты, команда, материалы и деньги — в одном пространстве. Меньше ручной рутины, больше внимания каждому автомобилю.</p>
+        <div class="landing-hero-actions"><a class="landing-button" href="{% url 'company-register' %}">Создать компанию</a><a class="landing-button-outline" href="#interface">Посмотреть интерфейс</a></div>
+        <div class="landing-hero-note"><span aria-hidden="true">✦</span> Отдельное рабочее пространство для вашей студии</div>
+      </div>
+      <div class="landing-hero-visual">
+        <div class="landing-preview-frame"><div class="landing-preview-bar"><span class="landing-preview-dots"><i></i><i></i><i></i></span><span>CRM Detailing / Записи</span><span class="landing-preview-live">● &nbsp;Рабочий день</span></div><img src="{% static 'img/landing-appointments-20261005.webp' %}" srcset="{% static 'img/landing-appointments-20261005-mobile.webp' %} 960w, {% static 'img/landing-appointments-1600-20261008.webp' %} 1600w, {% static 'img/landing-appointments-20261005.webp' %} 2400w" sizes="(max-width: 600px) calc(100vw - 34px), (max-width: 900px) calc(100vw - 56px), (max-width: 1180px) calc(63vw - 77px), (max-width: 1440px) calc(69.3vw - 106px), 920px" decoding="async" alt="Календарь записей CRM Detailing по сотрудникам" width="2880" height="1640" fetchpriority="high"></div>
+        <div class="landing-floating-card landing-floating-card-one"><span class="landing-floating-icon">✓</span><span><strong>Всё по плану</strong><small>Команда видит свои задачи</small></span></div>
+        <div class="landing-floating-card landing-floating-card-two"><span class="landing-floating-avatar">А</span><span><strong>Новая запись</strong><small>Александр · BMW X5</small></span><span class="landing-floating-time">09:00</span></div>
+        <small class="landing-preview-caption">Интерфейс CRM на демонстрационных данных</small>
+      </div>
+    </section>
+    <section class="landing-section landing-container" id="product">
+      <div class="landing-section-intro"><span class="landing-overline">01 / ПРОДУКТ</span><h2>Работа становится<br><em>прозрачной.</em></h2><p>История автомобиля и каждый этап работы доступны там, где они нужны: в расписании, карточке клиента и аналитике.</p></div>
+      <div class="landing-features">
+        <article class="landing-feature landing-feature-large"><span class="landing-feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="landing-feature-index">01</span><h3>Расписание без хаоса</h3><p>День по сотрудникам, записи и свободные окна — в одном календаре. Переносите работы и открывайте карточку прямо из расписания.</p><div class="landing-mini-calendar" aria-hidden="true"><div><span>09:00</span><i></i><i></i><i></i></div><div><span>10:00</span><i class="filled-blue"></i><i></i><i class="filled-mint"></i></div><div><span>11:00</span><i class="filled-blue"></i><i class="filled-violet"></i><i class="filled-mint"></i></div><div><span>12:00</span><i></i><i class="filled-violet"></i><i></i></div></div></article>
+        <article class="landing-feature"><span class="landing-feature-icon" aria-hidden="true">{% include 'core/_clients_icon.html' %}</span><span class="landing-feature-index">02</span><h3>Клиент и авто — рядом</h3><p>Контакты, автомобили, визиты и покупки связаны в одной истории. Контекст не теряется между звонком и следующей записью.</p></article>
+        <article class="landing-feature"><span class="landing-feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0M14 15a4.5 4.5 0 0 1 7.5 3.4V20"/></svg></span><span class="landing-feature-index">03</span><h3>Команда в курсе</h3><p>График смен, исполнители, роли и зарплата помогают распределять нагрузку и видеть, кто отвечает за результат.</p></article>
+        <article class="landing-feature"><span class="landing-feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="m4 8 6-4 6 5 5-6"/></svg></span><span class="landing-feature-index">04</span><h3>Финансы под контролем</h3><p>Оплаты, касса, скидки, расходы и показатели студии собраны в понятную картину.</p></article>
+        <article class="landing-feature"><span class="landing-feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/></svg></span><span class="landing-feature-index">05</span><h3>Материалы учтены</h3><p>Поступления, остатки и движения расходников видны вместе с работами. Система поможет не пропустить критический остаток.</p></article>
+      </div>
+    </section>
+    <section class="landing-showcase" id="interface"><div class="landing-container">
+      <div class="landing-showcase-heading"><div><span class="landing-overline">02 / ИНТЕРФЕЙС</span><h2>Сложное —<br><em>за кадром.</em></h2></div><p>Спокойный интерфейс для насыщенного рабочего дня. Главное видно сразу, детали всегда под рукой.</p></div>
+      <div class="landing-screenshot-grid">
+        <figure class="landing-showcase-panel landing-showcase-panel-main"><div class="landing-showcase-topline"><span><i></i> Расписание команды</span><span>Записи / Сотрудники / Статусы</span></div><img src="{% static 'img/landing-appointments-20261005.webp' %}" srcset="{% static 'img/landing-appointments-20261005-mobile.webp' %} 960w, {% static 'img/landing-appointments-1600-20261008.webp' %} 1600w, {% static 'img/landing-appointments-20261005.webp' %} 2400w" sizes="(max-width: 600px) calc(100vw - 50px), (max-width: 1180px) calc(100vw - 78px), (max-width: 1440px) calc(100vw - 110px), 1330px" decoding="async" alt="Страница записей CRM Detailing с календарём сотрудников" width="2880" height="1640" loading="lazy"><figcaption><span>01 / Записи</span><span>Загрузка сотрудников и статусы работ в одном календаре</span></figcaption></figure>
+        <figure class="landing-showcase-panel"><div class="landing-showcase-topline"><span><i></i> Учёт материалов</span><span>План / Факт / Остатки</span></div><img src="{% static 'img/landing-consumables-20261005.webp' %}" srcset="{% static 'img/landing-consumables-20261005-mobile.webp' %} 960w, {% static 'img/landing-consumables-1600-20261008.webp' %} 1600w, {% static 'img/landing-consumables-20261005.webp' %} 2400w" sizes="(max-width: 600px) calc(100vw - 50px), (max-width: 1180px) calc(50vw - 63px), (max-width: 1440px) calc(50vw - 79px), 641px" decoding="async" alt="Страница расходников CRM Detailing с плановыми и фактическими остатками" width="2880" height="1638" loading="lazy"><figcaption><span>02 / Расходники</span><span>Плановое и фактическое списание материалов</span></figcaption></figure>
+        <figure class="landing-showcase-panel"><div class="landing-showcase-topline"><span><i></i> Показатели студии</span><span>Выручка / Затраты / Результат</span></div><img src="{% static 'img/landing-analytics-20261005.webp' %}" srcset="{% static 'img/landing-analytics-20261005-mobile.webp' %} 960w, {% static 'img/landing-analytics-1600-20261008.webp' %} 1600w, {% static 'img/landing-analytics-20261005.webp' %} 2400w" sizes="(max-width: 600px) calc(100vw - 50px), (max-width: 1180px) calc(50vw - 63px), (max-width: 1440px) calc(50vw - 79px), 641px" decoding="async" alt="Страница аналитики CRM Detailing с выручкой, затратами и результатом" width="2880" height="1638" loading="lazy"><figcaption><span>03 / Аналитика</span><span>Финансовая картина за выбранный период</span></figcaption></figure>
+      </div>
+      <div class="landing-showcase-footer"><span>Реальный интерфейс CRM</span><span>Скриншоты показаны на демонстрационных данных</span></div>
+    </div></section>
+    <section class="landing-section landing-container landing-flow">
+      <div class="landing-section-intro"><span class="landing-overline">03 / КАК ЭТО РАБОТАЕТ</span><h2>От записи до<br><em>результата.</em></h2></div>
+      <div class="landing-flow-list"><article><span>01</span><div><h3>Запишите клиента</h3><p>Укажите автомобиль, услуги, время и исполнителя. Всё сразу появится в расписании.</p></div><b aria-hidden="true">↗</b></article><article><span>02</span><div><h3>Ведите работу</h3><p>Отмечайте статусы, оплаты и используемые материалы. Команда работает в общем контексте.</p></div><b aria-hidden="true">↗</b></article><article><span>03</span><div><h3>Смотрите картину целиком</h3><p>История клиента, загрузка студии и финансовые показатели помогают принимать решения.</p></div><b aria-hidden="true">↗</b></article></div>
+    </section>
+    <section class="landing-container landing-pricing" id="pricing"><span class="landing-overline">04 / ПОДПИСКА</span><h2>Все возможности с первого дня.</h2><p>Все функции CRM доступны в каждом пакете. Владелец не входит в лимит сотрудников. 14 дней бесплатно без карты.</p><div class="landing-pricing-grid billing-public-grid">{% for plan in plans %}<article class="landing-plan"><h3>{{ plan.name }}</h3><p>{% if plan.limits.active_employees %}До {{ plan.limits.active_employees }} сотрудников{% else %}{{ plan.description }}{% endif %}</p>{% if plan.code == 'network' %}<strong class="landing-plan-price">По запросу</strong><p>Индивидуальное подключение сети</p><a class="landing-button" href="{% url 'network-request' %}">Оставить заявку</a>{% else %}<div class="landing-plan-offer"><span class="landing-plan-period">При оплате от 6 месяцев</span><strong class="landing-plan-price">{{ plan.prepaid_monthly_price|floatformat:0 }} ₽ <small>/ мес.</small></strong></div><p class="landing-plan-monthly">При оплате помесячно: <strong>{{ plan.monthly_price|floatformat:0 }} ₽ / мес.</strong></p><a class="landing-button" href="{% url 'company-register' %}?plan={{ plan.code }}">Попробовать бесплатно</a>{% endif %}</article>{% endfor %}</div></section>
+    <section class="landing-contact landing-container" id="contacts">
+      <div class="landing-contact-card"><div><span class="landing-overline">05 / КОНТАКТЫ И ДОСТУП</span><h2>Хорошая работа<br>начинается <em>с порядка.</em></h2><p>По вопросам подключения и работы CRM напишите нам: <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p><p>Поддержка в Telegram: <a href="https://t.me/CRMDetailingSupport" target="_blank" rel="noopener">@CRMDetailingSupport</a><br>Канал CRM Detailing: <a href="https://t.me/crmdetailing" target="_blank" rel="noopener">@crmdetailing</a></p><div class="landing-contact-actions"><a class="landing-button landing-button-white" href="{% url 'company-register' %}">Создать компанию</a><a href="#login">Уже есть аккаунт?</a></div></div><div class="landing-contact-symbol" aria-hidden="true"><img src="{% static 'img/crm-logo-480-20261007.webp' %}" alt=""></div></div>
+      <div class="landing-access" id="login"><div><span class="landing-overline">ВХОД В CRM</span><h3>Вернуться к работе</h3><p>Введите адрес вашей компании — откроем её страницу входа.</p></div>
+        <form class="landing-tenant-form" id="tenant-login"><label for="tenant-slug">Адрес компании</label><div><span aria-hidden="true">↗</span><input id="tenant-slug" name="slug" type="text" inputmode="url" autocomplete="organization" placeholder="название-студии" pattern="[a-z0-9-]+" required><span class="landing-tenant-domain">.{{ primary_domain }}</span><button type="submit" aria-label="Перейти к входу">Войти</button></div><small>Адрес указывался при регистрации компании.</small></form>
+      </div>
+    </section>
+  </main>
+  <footer class="landing-footer"><div class="landing-container"><a class="landing-brand" href="#top" aria-label="CRM Detailing — к началу страницы"><span class="landing-brand-symbol"><img src="{% static 'img/crm-logo-480-20261007.webp' %}" alt=""></span><span class="landing-brand-name">crmdetailing<span>.ru</span></span></a><div class="landing-footer-links"><a href="#product">Возможности</a><a href="#interface">Интерфейс</a><a href="#pricing">Подписка</a><a href="#contacts">Контакты</a><a href="https://{{ support_domain }}">База знаний</a><a href="#login">Вход</a><a href="{% url 'legal-document' 'privacy' %}">Политика ПД</a><a href="{% url 'legal-document' 'offer' %}">Оферта</a></div><span>© {% now "Y" %} CRM Detailing</span></div></footer>
+</div>
+<script>
+  document.getElementById("tenant-login").addEventListener("submit", function (event) {
+    event.preventDefault();
+    const slug = document.getElementById("tenant-slug").value.trim().toLowerCase();
+    if (/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(slug)) window.location.href = "https://" + slug + ".{{ primary_domain|escapejs }}/login/";
+  });
+</script>
+<script src="{% static 'js/landing-menu.js' %}?v=20260917-2" defer></script>
+{% endblock %}

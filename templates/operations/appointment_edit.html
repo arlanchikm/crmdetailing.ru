@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Изменение записи — {{ current_tenant.name }}{% endblock %}
+{% block body_class %}appointment-form-body{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><h1>Изменение записи</h1><p>{{ appointment.client_display_name }} · {{ appointment.start_at|date:"d.m.Y H:i" }}</p></div></div>
+<section class="form-card wide-form">{% include "operations/_appointment_modal_form.html" %}</section>
+{% endblock %}

@@ -1,0 +1,16 @@
+.git
+.env
+.env.production
+.env.*
+deploy/runtime
+.codex
+.agents
+.venv
+__pycache__
+*.pyc
+*.docx
+backups
+media
+staticfiles
+output
+build_tz_crm.py

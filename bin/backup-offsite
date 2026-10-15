@@ -1,0 +1,77 @@
+#!/bin/sh
+set -eu
+umask 077
+
+PROJECT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+BACKUP_CONFIG=${BACKUP_CONFIG:-/etc/crm-detailing/backup.env}
+ENV_FILE=${PRODUCTION_ENV_FILE:-"$PROJECT_DIR/.env.production"}
+
+if [ ! -r "$BACKUP_CONFIG" ]; then
+  echo "Не найден конфигурационный файл резервного копирования: $BACKUP_CONFIG" >&2
+  exit 1
+fi
+
+set -a
+. "$BACKUP_CONFIG"
+set +a
+
+: "${RESTIC_REPOSITORY:?Укажите RESTIC_REPOSITORY в backup.env}"
+: "${RESTIC_PASSWORD_FILE:?Укажите RESTIC_PASSWORD_FILE в backup.env}"
+
+case "$RESTIC_REPOSITORY" in
+  rclone:*)
+    : "${RCLONE_CONFIG:?Укажите RCLONE_CONFIG в backup.env}"
+    if [ ! -r "$RCLONE_CONFIG" ] || ! command -v rclone >/dev/null 2>&1; then
+      echo "Не найден конфигурационный файл rclone или программа rclone." >&2
+      exit 1
+    fi
+    ;;
+  s3:*)
+    : "${AWS_ACCESS_KEY_ID:?Укажите AWS_ACCESS_KEY_ID в backup.env}"
+    : "${AWS_SECRET_ACCESS_KEY:?Укажите AWS_SECRET_ACCESS_KEY в backup.env}"
+    ;;
+  *)
+    echo "Поддерживаются репозитории restic вида rclone: и s3:." >&2
+    exit 1
+    ;;
+esac
+
+if [ ! -s "$RESTIC_PASSWORD_FILE" ] || [ ! -f "$ENV_FILE" ]; then
+  echo "Не найден пароль restic или production env-файл." >&2
+  exit 1
+fi
+
+if ! command -v restic >/dev/null 2>&1; then
+  echo "Установите restic перед запуском резервного копирования." >&2
+  exit 1
+fi
+
+case "${RESTIC_RETENTION:-false}" in
+  true|false) ;;
+  *)
+    echo "RESTIC_RETENTION должно быть true или false." >&2
+    exit 1
+    ;;
+esac
+
+BACKUP_DIR="$PROJECT_DIR/backups"
+mkdir -p "$BACKUP_DIR"
+chmod 700 "$BACKUP_DIR"
+STAGING_DIR=$(mktemp -d "$BACKUP_DIR/offsite-XXXXXXXX")
+
+"$PROJECT_DIR/bin/backup" "$STAGING_DIR"
+restic backup --tag crm-detailing "$STAGING_DIR" "$ENV_FILE"
+
+# Временный локальный набор удаляем только после успешной отправки restic.
+rm -rf -- "$STAGING_DIR"
+
+# Пути временных каталогов каждый день разные, поэтому исключаем paths из группировки.
+case "${RESTIC_RETENTION:-false}" in
+  true)
+    restic forget --tag crm-detailing --group-by host,tags \
+      --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --prune
+    ;;
+  false) ;;
+esac
+
+echo "Зашифрованная резервная копия отправлена в удаленное хранилище."

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Журнал действий — {{ current_tenant.name }}{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><h1>Журнал действий</h1><p>Последние 300 значимых изменений в CRM</p></div></div>
+<div class="table-card"><table><thead><tr><th>Дата</th><th>Пользователь</th><th>Действие</th><th>Объект</th><th>Описание</th><th>Изменения</th></tr></thead><tbody>
+{% for event in events %}<tr><td>{{ event.created_at|date:"d.m.Y H:i" }}</td><td>{{ event.actor.email|default:"Система" }}</td><td>{{ event.action_label }}</td><td>{{ event.entity_label }}{% if event.entity_id %}<small class="table-subtitle">{{ event.entity_id }}</small>{% endif %}</td><td>{{ event.description }}</td><td>{% for field, before, after in event.change_rows %}<small class="table-subtitle"><strong>{{ field }}</strong>: {{ before }} → {{ after }}</small>{% empty %}—{% endfor %}</td></tr>{% empty %}<tr><td colspan="6" class="empty">Событий пока нет.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

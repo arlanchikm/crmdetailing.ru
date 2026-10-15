@@ -1,0 +1,39 @@
+<div class="modal-head">
+  <div><span class="eyebrow">Редактирование записи</span><h2>{{ appointment.client_display_name }}</h2><p>Измените исполнителя, время, пост или услуги</p></div>
+  <button class="modal-close" type="button" data-modal-close aria-label="Закрыть">×</button>
+</div>
+<form class="modal-form js-modal-form" method="post" action="{% url 'appointment-edit' appointment.id %}?modal=1{% if focus_services %}&amp;focus=services{% endif %}" data-appointment-edit>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+  {% if financial_locked %}<div class="form-error">У завершённой записи услуги и скидка зафиксированы. Можно изменить клиента, исполнителей, время, пост и комментарий.</div>{% endif %}
+  <div class="form-grid">
+    <div class="field">{{ form.client.label_tag }}{{ form.client }}{% for error in form.client.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+    <div class="field">{{ form.car.label_tag }}{{ form.car }}{% for error in form.car.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+    <div class="field">{{ form.car_vehicle_class.label_tag }}{{ form.car_vehicle_class }}{% for error in form.car_vehicle_class.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+    {% include "operations/_assignee_picker.html" %}
+    <div class="field">{{ form.post.label_tag }}{{ form.post }}{% for error in form.post.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+    <div class="field">{{ form.start_at.label_tag }}{{ form.start_at }}{% for error in form.start_at.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+    <div class="field">{{ form.end_at.label_tag }}{{ form.end_at }}{% for error in form.end_at.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+  </div>
+  <div class="field service-choice-field" id="services" data-service-section>
+    <label>Услуги</label>
+    <div class="service-card-list">
+      {% for row in service_rows %}{% with service=row.service service_id=row.service.id|stringformat:"s" %}<div class="service-select-card" data-has-class-choice="{{ row.has_class_choice|yesno:'1,0' }}"><label><input type="checkbox" name="services" value="{{ service.id }}" data-duration="{{ service.duration_minutes }}" data-price="{{ service.price }}" data-system-key="{{ service.system_key }}" data-calculation-type="{{ service.calculation_type }}" {% if service_id in selected_service_ids %}checked{% endif %} {% if financial_locked %}disabled{% endif %}><span class="service-check">✓</span><span><strong>{{ service.name }}</strong><small>{% if service.system_key == 'other' %}Стоимость и время указываются в записи{% else %}<b data-service-duration-label>{{ service.duration_minutes }}</b> мин. · <b data-service-price-label>{{ service.price|floatformat:0 }} ₽</b>{% endif %}</small></span></label>{% if service.calculation_type == 'unit' %}<div class="service-quantity{% if service_id not in selected_service_ids %} is-hidden{% endif %}" data-service-quantity><span>Количество</span><div class="service-quantity-control"><button type="button" data-quantity-minus aria-label="Уменьшить количество" {% if financial_locked %}disabled{% endif %}>−</button><input type="number" name="service_quantity_{{ service.id }}" value="{{ row.quantity }}" min="1" step="1" inputmode="numeric" aria-label="Количество услуги {{ service.name }}" {% if financial_locked %}disabled{% endif %}><button type="button" data-quantity-plus aria-label="Увеличить количество" {% if financial_locked %}disabled{% endif %}>+</button></div></div>{% endif %}<div class="service-class-choice{% if service.system_key == 'other' or not row.has_class_choice or service_id not in selected_service_ids %} is-hidden{% endif %}"><span>Класс</span>{{ row.class_field }}</div></div>{% endwith %}{% endfor %}
+    </div>
+    <div class="service-total"><span>Выбрано: <strong data-selected-count>0</strong></span><span>Длительность: <strong data-selected-duration>0 мин.</strong></span><span>Стоимость: <strong data-selected-price>0 ₽</strong></span></div>
+    {% for error in form.services.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+  </div>
+  <div class="form-grid other-service-fields" data-other-service-fields hidden>
+    <div class="field">{{ form.other_price.label_tag }}{{ form.other_price }}{% for error in form.other_price.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+    <div class="field">{{ form.other_duration_minutes.label_tag }}{{ form.other_duration_minutes }}{% for error in form.other_duration_minutes.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+  </div>
+  <div class="field">{{ form.comment.label_tag }}{{ form.comment }}{% for error in form.comment.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+  <div class="form-grid"><div class="field">{{ form.discount_kind.label_tag }}{{ form.discount_kind }}{% for error in form.discount_kind.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div><div class="field">{{ form.discount_value.label_tag }}{{ form.discount_value }}{% for error in form.discount_value.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div></div>
+  <div class="field">{{ form.discount_reason.label_tag }}{{ form.discount_reason }}{% for error in form.discount_reason.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+  <div class="field">{{ form.free_service_reason.label_tag }}{{ form.free_service_reason }}{% for error in form.free_service_reason.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+  <div class="modal-actions"><button class="button primary" type="submit">Сохранить</button><button class="button ghost js-modal-load" type="button" data-url="{% url 'appointment-detail' appointment.id %}?modal=1">Отмена</button></div>
+</form>
+{{ car_map|json_script:"modal-client-car-map" }}
+{{ car_class_map|json_script:"modal-car-class-map" }}
+{{ service_price_data|json_script:"modal-service-price-data" }}
+{{ service_duration_data|json_script:"modal-service-duration-data" }}

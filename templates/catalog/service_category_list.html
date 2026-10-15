@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Категории услуг — {{ current_tenant.name }}{% endblock %}
+{% block body_class %}service-category-list-body{% endblock %}
+{% block crm_content %}
+<div class="page-heading"><div><a class="back-link" href="{% url 'service-list' %}">← Услуги</a><h1>Категории услуг</h1><p>Категория используется для группировки и быстрого поиска услуг</p></div><a class="button primary mobile-create-action" href="{% url 'service-category-create' %}" aria-label="Добавить категорию">+ Добавить категорию</a></div>
+<div class="card-grid service-category-grid">
+  {% for category in categories %}<article class="info-card service-category-card">
+    <div><span class="status-pill{% if not category.active %} inactive{% endif %}">{% if category.active %}Активна{% else %}Отключена{% endif %}</span><h2>{{ category.name }}</h2><p>{{ category.service_count }} услуг</p></div>
+    <div class="category-card-actions"><a class="button ghost" href="{% url 'service-category-edit' category.id %}">Изменить</a><form method="post" action="{% url 'service-category-delete' category.id %}" onsubmit="return confirm('Удалить категорию «{{ category.name|escapejs }}»? Связанные услуги останутся без категории.');">{% csrf_token %}<button class="button danger" type="submit">Удалить</button></form></div>
+  </article>{% empty %}<div class="empty-card">Категории ещё не добавлены.</div>{% endfor %}
+</div>
+{% endblock %}
